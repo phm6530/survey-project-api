@@ -83,3 +83,11 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+
+```bash
+npm i --save-dev @types/nodemailer;
+npm i nodemailer
+npm i @nestjs/serve-static
+npm install class-validator class-transformer
+npm install @nestjs/config
+```
