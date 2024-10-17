@@ -1,17 +1,20 @@
+import { PickType } from '@nestjs/mapped-types';
+import { Type } from 'class-transformer';
 import {
-  IsArray,
+  ArrayMinSize,
   IsEnum,
-  IsNumber,
   IsOptional,
   IsString,
+  ValidateIf,
   ValidateNested,
 } from 'class-validator';
-import { QuestionTypes } from 'src/template/entries/survey/survey-questions.entity';
+import { QuestionOptionsDto } from 'src/template/dto/survey-option.dto';
+import {
+  QuestionTypes,
+  SurveyQuestion,
+} from 'src/template/entries/survey/survey-questions.entity';
 
-export class SurveyQuestionDto {
-  @IsNumber()
-  id: number;
-
+export class SurveyQuestionDto extends PickType(SurveyQuestion, ['label']) {
   // 문항
   @IsString()
   label: string;
@@ -20,14 +23,15 @@ export class SurveyQuestionDto {
   @IsEnum(QuestionTypes)
   type: QuestionTypes;
 
-  //사진의 유무는 옵셔널처리
+  //무슨 문항인지? 주관 / 객관
   @IsOptional()
   @IsString()
   optionPicture?: string;
 
-  //객관식일 경우는 릴레이션
-  @IsOptional()
-  @IsArray()
+  //무슨 문항인지? 주관 / 객관
+  @ValidateIf((o) => o.type === QuestionTypes.SELECT) // 객관식일 때만 options 필수
+  @ArrayMinSize(2, { message: '객관식은 2가지 이상' })
   @ValidateNested({ each: true })
-  options?: string[];
+  @Type(() => QuestionOptionsDto)
+  options?: QuestionOptionsDto[];
 }

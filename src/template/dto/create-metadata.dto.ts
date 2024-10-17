@@ -1,5 +1,6 @@
 import { PickType } from '@nestjs/mapped-types';
-import { IsBoolean, IsDate, IsEnum, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator';
 import {
   TemplateMetaModel,
   TemplateType,
@@ -10,10 +11,10 @@ export class CreateMetadataDto extends PickType(TemplateMetaModel, [
   'title',
   'description',
   'templateType',
-  'isGenderCallrected',
+  'isGenderCollected',
   'isAgeCollected',
-  'startDate',
-  'endDate',
+  // 'startDate',
+  // 'endDate',
   'thumbnail',
 ]) {
   @IsString()
@@ -28,7 +29,7 @@ export class CreateMetadataDto extends PickType(TemplateMetaModel, [
 
   //성별 집계
   @IsBoolean()
-  isGenderCallrected: boolean;
+  isGenderCollected: boolean;
 
   //나이 집계
   @IsBoolean()
@@ -38,9 +39,12 @@ export class CreateMetadataDto extends PickType(TemplateMetaModel, [
   @IsEnum(TemplateType)
   templateType: TemplateType;
 
-  @IsDate()
+  @Type(() => Date)
+  @IsOptional()
   startDate: Date;
 
-  @IsDate()
+  @Type(() => Date)
+  @IsOptional()
+  //class trasform lib는 모두 옵셔널로처리함 떄문에 is Not Empty 처리하는것도 좋음ㅇㅇ
   endDate: Date;
 }

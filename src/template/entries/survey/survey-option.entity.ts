@@ -20,7 +20,7 @@ export class QustionOption {
   type: QuestionTypes;
 
   @Column({ nullable: true })
-  optionPicture: string;
+  optionPicture?: string;
 
   @ManyToOne(() => SurveyQuestion, (Questions) => Questions.options)
   question: SurveyQuestion;

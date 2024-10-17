@@ -19,15 +19,15 @@ export class TemplateMetaModel extends BaseModel {
   templateType: TemplateType;
 
   @Column()
-  isGenderCallrected: boolean;
+  isGenderCollected: boolean;
 
   @Column()
   isAgeCollected: boolean;
 
-  @Column()
+  @Column({ nullable: true })
   startDate: Date;
 
-  @Column()
+  @Column({ nullable: true })
   endDate: Date;
 
   @Column()

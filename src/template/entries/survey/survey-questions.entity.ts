@@ -30,14 +30,14 @@ export class SurveyQuestion {
 
   //주관식 or 객관식
   @Column({ enum: QuestionTypes })
-  question_type: QuestionTypes;
+  type: QuestionTypes;
 
   //설문 문제
   @Column()
-  question_label: string;
+  label: string;
 
   @Column({ nullable: true })
-  question_pictrue: string;
+  pictrue: string;
 
   //객관식 일 때 설문 항목
   @OneToMany(() => QustionOption, (option) => option.question, {

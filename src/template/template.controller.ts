@@ -1,39 +1,58 @@
-import { Body, Controller, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { TemplateService } from './template.service';
 import { CreateTemplateDto } from 'src/template/dto/create-template.dto';
-// import { CreateTemplateDto } from 'src/template/dto/create-template.dto';
+import { DataSource } from 'typeorm';
+import { withTransaction } from 'lib/withTransaction.lib';
 
 export enum templateType {
   SURVEY = 'survey',
   RANK = 'rank',
 }
 
-//Post Data
-
-// {
-//   title: '365262',
-//   description: '62626',
-//   thumbnail: '/_upload/survey/f32668ee-e51c-4e9b-9e5e-b0a56243f0d7/2024-10-17T05_29_02.160Z.jpg',
-//   genderChk: '1',
-//   ageChk: '1',
-//   dateRange: null,
-//   items: [ { id: 1, label: 'ㄷ', type: 'text' } ],
-//   template: 'survey',
-//   template_key: 'f32668ee-e51c-4e9b-9e5e-b0a56243f0d7'
-// }
+export type GetTemplateParams = {
+  template: string;
+  id: number;
+};
 
 @Controller('template')
 export class TemplateController {
-  constructor(private readonly templateService: TemplateService) {}
+  constructor(
+    private readonly templateService: TemplateService,
+    private readonly dataSource: DataSource,
+  ) {}
 
+  // 설문조사 템플릿 생성
   @Post(':template')
-  postTemplate(
+  async createTemplate(
     @Param('template') template: templateType,
     @Body() body: CreateTemplateDto,
   ) {
-    console.log(body);
-    if (template === 'survey') {
-      return this.templateService.createSurvey();
-    }
+    const result = await withTransaction(this.dataSource, async (qr) => {
+      const { questions, ...metadata } = body;
+
+      if (template === 'survey') {
+        //Meta
+        const meta = await this.templateService.createTemplateMeta(
+          { ...metadata },
+          qr,
+        );
+
+        //Questions
+        await this.templateService.createSurveyQustions(questions, qr, meta);
+        return true;
+      }
+    });
+
+    return {
+      statusCode: 201,
+      data: result,
+    };
+  }
+
+  // Tempalte 가져오기
+  @Get(':template/:id')
+  getTemplate(@Param() params: GetTemplateParams) {
+    console.log(typeof params.id);
+    return true;
   }
 }
