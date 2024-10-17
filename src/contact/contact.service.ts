@@ -2,13 +2,13 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SendMailDto } from 'src/contact/dto/post-mail.dto';
 import * as nodemailer from 'nodemailer';
-// import dayjs from 'dayjs'; // 기본 import 방식
 import 'dayjs/locale/ko';
 
 @Injectable()
 export class ContactService {
   constructor(private readonly configService: ConfigService) {}
 
+  // 네이버메일 보내기
   async sendMail({ name, digit, textarea }: SendMailDto) {
     const mailConfig = nodemailer.createTransport({
       service: this.configService.get<string>('MAIL_SERVICE'),
@@ -23,15 +23,13 @@ export class ContactService {
       to: process.env.MAIL_ID,
       subject: '[Project-D] 문의메일',
       html: `
-      <h1>문의사항</h1>
-      <br><br>
-      <p>이름 : ${name}</p>
-      <p>연락처 : ${digit} </p>
-      <p>${textarea}</p>
-      <br>
-
+        <h1>문의사항</h1>
+        <br><br>
+        <p>이름 : ${name}</p>
+        <p>연락처 : ${digit} </p>
+        <p>${textarea}</p>
+        <br>
       <p style="font-size:12px; opacity : .7;">
-      
     `,
     });
 

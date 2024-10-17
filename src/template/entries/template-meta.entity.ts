@@ -1,7 +1,8 @@
 import { BaseModel } from 'src/common/entries/base.entity';
-import { Column, Entity } from 'typeorm';
+import { SurveyQuestion } from 'src/template/entries/survey/survey-questions.entity';
+import { Column, Entity, OneToMany } from 'typeorm';
 
-export enum templateType {
+export enum TemplateType {
   SURVEY = 'survey',
   RANK = 'rank',
 }
@@ -12,16 +13,16 @@ export class TemplateMetaModel extends BaseModel {
   title: string;
 
   @Column()
-  gender: boolean;
-
-  @Column()
   description: string;
 
-  @Column({ enum: templateType })
-  templateType: templateType;
+  @Column({ enum: TemplateType })
+  templateType: TemplateType;
 
   @Column()
-  age: boolean;
+  isGenderCallrected: boolean;
+
+  @Column()
+  isAgeCollected: boolean;
 
   @Column()
   startDate: Date;
@@ -31,4 +32,7 @@ export class TemplateMetaModel extends BaseModel {
 
   @Column()
   thumbnail: string;
+
+  @OneToMany(() => SurveyQuestion, (questions) => questions.templateMeta)
+  questions: SurveyQuestion[];
 }
