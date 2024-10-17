@@ -7,7 +7,6 @@ export const withTransaction = async <T>(
 ) => {
   const qr = dataSource.createQueryRunner();
   try {
-    //트랜잭션 시작
     await qr.connect();
     await qr.startTransaction();
     const result = await cb(qr);
@@ -17,6 +16,6 @@ export const withTransaction = async <T>(
     await qr.rollbackTransaction();
     throw new InternalServerErrorException(error.message);
   } finally {
-    await qr.release();
+    await qr.release(); // 모든 쿼리가 완료된 후에 해제
   }
 };

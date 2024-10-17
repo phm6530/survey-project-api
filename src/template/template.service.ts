@@ -1,10 +1,16 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { Injectable, NotFoundException } from '@nestjs/common';
+
 import { CreateTemplateDto } from 'src/template/dto/create-template.dto';
-import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
+import {
+  TemplateMetaModel,
+  TemplateType,
+} from 'src/template/entries/template-meta.entity';
 import { QueryRunner, Repository } from 'typeorm';
 import { SurveyQuestionDto } from 'src/template/dto/survey-question.dto';
 import { SurveyQuestion } from 'src/template/entries/survey/survey-questions.entity';
+import { QustionOption } from 'src/template/entries/survey/survey-option.entity';
+import { QuestionOptionsDto } from 'src/template/dto/survey-option.dto';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class TemplateService {
@@ -34,15 +40,48 @@ export class TemplateService {
   ) {
     const repository = qr.manager.getRepository<SurveyQuestion>(SurveyQuestion);
 
-    questions.forEach(async (item) => {
+    for (const item of questions) {
+      // for...of 사용
       const entity = repository.create({ ...item, templateMeta: meta });
-      // 주관식 + 객관식
-      await repository.save(entity);
+      const question = await repository.save(entity); // 비동기 작업을 기다림
 
       // 객관식 처리
       if (item.type === 'select') {
-        return 1;
+        for (const option of item.options) {
+          // for...of 사용
+          await this.createSurveyOptions(option, question, qr); // 비동기 작업을 기다림
+        }
       }
+    }
+  }
+
+  // 객관식 옵션 생성
+  async createSurveyOptions(
+    option: QuestionOptionsDto,
+    question: SurveyQuestionDto,
+    qr: QueryRunner,
+  ) {
+    const repository = qr.manager.getRepository<QustionOption>(QustionOption);
+    const entity = repository.create({ ...option, question });
+    await repository.save(entity);
+  }
+
+  // get List
+  async getlist() {
+    return await this.templateRepository.find();
+  }
+
+  //get By Id
+  async getTemplateById(templetType: TemplateType, id: number) {
+    const item = await this.templateRepository.findOne({
+      where: { id, templateType: templetType },
+      relations: ['questions', 'questions.options'],
     });
+
+    if (!item) {
+      throw new NotFoundException('없는페이지');
+    }
+
+    return item;
   }
 }

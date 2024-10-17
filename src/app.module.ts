@@ -13,6 +13,7 @@ import { UserModel } from 'src/user/entries/user.entity';
 import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
 import { SurveyQuestion } from 'src/template/entries/survey/survey-questions.entity';
 import { QustionOption } from 'src/template/entries/survey/survey-option.entity';
+import { ResponseModel } from 'src/template/entries/response/response.entity';
 
 @Module({
   imports: [
@@ -33,7 +34,13 @@ import { QustionOption } from 'src/template/entries/survey/survey-option.entity'
       username: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_DATABASE,
-      entities: [UserModel, TemplateMetaModel, SurveyQuestion, QustionOption],
+      entities: [
+        UserModel,
+        TemplateMetaModel,
+        SurveyQuestion,
+        QustionOption,
+        ResponseModel,
+      ],
       synchronize: true,
     }),
     AuthModule,

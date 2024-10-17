@@ -1,3 +1,4 @@
+import { ResponseModel } from 'src/template/entries/response/response.entity';
 import { QustionOption } from 'src/template/entries/survey/survey-option.entity';
 import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
 import {
@@ -5,6 +6,7 @@ import {
   Entity,
   ManyToOne,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -44,4 +46,7 @@ export class SurveyQuestion {
     nullable: true,
   })
   options: QustionOption[];
+
+  @OneToOne(() => ResponseModel)
+  response: ResponseModel;
 }
