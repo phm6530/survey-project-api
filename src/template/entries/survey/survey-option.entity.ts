@@ -7,7 +7,7 @@ import {
   Column,
   Entity,
   ManyToOne,
-  OneToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -32,6 +32,6 @@ export class QustionOption {
   @ManyToOne(() => SurveyQuestion, (Questions) => Questions.options)
   question: SurveyQuestion;
 
-  @OneToOne(() => AnswerModel, (response) => response.question)
-  response: AnswerModel;
+  @OneToMany(() => AnswerModel, (response) => response.question)
+  response: AnswerModel[];
 }

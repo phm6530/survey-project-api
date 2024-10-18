@@ -4,8 +4,8 @@ import { SurveyQuestion } from 'src/template/entries/survey/survey-questions.ent
 import {
   Column,
   Entity,
+  JoinColumn,
   ManyToOne,
-  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -15,7 +15,7 @@ export class AnswerModel {
   id: number;
 
   //문제랑 답변이랑 One to One 관계설정
-  @OneToOne(() => SurveyQuestion, (question) => question.response)
+  @ManyToOne(() => SurveyQuestion, (question) => question.response)
   question: SurveyQuestion;
 
   //주관식일떄
@@ -23,9 +23,17 @@ export class AnswerModel {
   answer: string;
 
   //객관식일때는 option의 value 가져오기 ㅇㅇ
-  @OneToOne(() => QustionOption, (question) => question.response)
+
+  // 성별 + 나이 집계 하지않을 수도 있기 때문에 nullable 처리
+
+  @ManyToOne(() => QustionOption, (question) => question.response, {
+    nullable: true,
+  })
+  @JoinColumn()
   option: QustionOption;
 
-  @ManyToOne(() => RespondentModel, (respondent) => respondent.answer)
+  @ManyToOne(() => RespondentModel, (respondent) => respondent.answer, {
+    nullable: true,
+  })
   repondent: RespondentModel;
 }
