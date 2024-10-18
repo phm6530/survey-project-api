@@ -1,9 +1,16 @@
+import { RespondentModel } from 'src/answer/entries/respondent.entity';
 import { QustionOption } from 'src/template/entries/survey/survey-option.entity';
 import { SurveyQuestion } from 'src/template/entries/survey/survey-questions.entity';
-import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  ManyToOne,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
-export class ResponseModel {
+export class AnswerModel {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -18,4 +25,7 @@ export class ResponseModel {
   //객관식일때는 option의 value 가져오기 ㅇㅇ
   @OneToOne(() => QustionOption, (question) => question.response)
   option: QustionOption;
+
+  @ManyToOne(() => RespondentModel, (respondent) => respondent.answer)
+  repondent: RespondentModel;
 }

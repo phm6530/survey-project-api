@@ -1,4 +1,4 @@
-import { ResponseModel } from 'src/template/entries/response/response.entity';
+import { AnswerModel } from 'src/answer/entries/answer.entity';
 import { QustionOption } from 'src/template/entries/survey/survey-option.entity';
 import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
 import {
@@ -47,6 +47,6 @@ export class SurveyQuestion {
   })
   options: QustionOption[];
 
-  @OneToOne(() => ResponseModel)
-  response: ResponseModel;
+  @OneToOne(() => AnswerModel)
+  response: AnswerModel;
 }

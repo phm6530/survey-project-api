@@ -1,4 +1,4 @@
-import { ResponseModel } from 'src/template/entries/response/response.entity';
+import { AnswerModel } from 'src/answer/entries/answer.entity';
 import {
   QuestionTypes,
   SurveyQuestion,
@@ -32,6 +32,6 @@ export class QustionOption {
   @ManyToOne(() => SurveyQuestion, (Questions) => Questions.options)
   question: SurveyQuestion;
 
-  @OneToOne(() => ResponseModel, (response) => response.question)
-  response: ResponseModel;
+  @OneToOne(() => AnswerModel, (response) => response.question)
+  response: AnswerModel;
 }

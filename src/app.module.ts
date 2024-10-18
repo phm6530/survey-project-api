@@ -13,7 +13,10 @@ import { UserModel } from 'src/user/entries/user.entity';
 import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
 import { SurveyQuestion } from 'src/template/entries/survey/survey-questions.entity';
 import { QustionOption } from 'src/template/entries/survey/survey-option.entity';
-import { ResponseModel } from 'src/template/entries/response/response.entity';
+
+import { AnswerModule } from './answer/answer.module';
+import { AnswerModel } from 'src/answer/entries/answer.entity';
+import { RespondentModel } from 'src/answer/entries/respondent.entity';
 
 @Module({
   imports: [
@@ -39,7 +42,8 @@ import { ResponseModel } from 'src/template/entries/response/response.entity';
         TemplateMetaModel,
         SurveyQuestion,
         QustionOption,
-        ResponseModel,
+        AnswerModel,
+        RespondentModel,
       ],
       synchronize: true,
     }),
@@ -47,6 +51,7 @@ import { ResponseModel } from 'src/template/entries/response/response.entity';
     CommonModule,
     UserModule,
     TemplateModule,
+    AnswerModule,
   ],
   controllers: [AppController],
   providers: [AppService],
