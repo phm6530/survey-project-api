@@ -23,7 +23,13 @@ export enum QuestionTypes {
 export class SurveyQuestion {
   // 여러 개의 Survey가 하나의 Template에 속할 수 있음
   // 종속하는 template 연결
-  @ManyToOne(() => TemplateMetaModel, (templateMeta) => templateMeta.questions)
+  @ManyToOne(
+    () => TemplateMetaModel,
+    (templateMeta) => templateMeta.questions,
+    {
+      onDelete: 'CASCADE',
+    },
+  )
   templateMeta: TemplateMetaModel;
 
   @PrimaryGeneratedColumn()
@@ -43,7 +49,7 @@ export class SurveyQuestion {
   //객관식 일 때 설문 항목
   @OneToMany(() => QustionOption, (option) => option.question, {
     nullable: true,
-    cascade: true,
+    cascade: ['remove'],
   })
   options: QustionOption[];
 

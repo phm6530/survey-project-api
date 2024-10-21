@@ -69,14 +69,14 @@ export class TemplateService {
 
   // get List
   async getlist() {
-    return await this.templateRepository.find();
+    return await this.templateRepository.find({ relations: ['respondents'] });
   }
 
   //get By Id
   async getTemplateById(templetType: TemplateType, id: number) {
     const item = await this.templateRepository.findOne({
       where: { id, templateType: templetType },
-      relations: ['questions', 'questions.options'],
+      relations: ['questions', 'questions.options', 'respondents'],
     });
 
     if (!item) {
@@ -90,7 +90,10 @@ export class TemplateService {
     const isExist = await this.templateRepository.findOne({
       where: { id, templateType: template },
     });
+    if (!isExist) {
+      throw new NotFoundException('이미 삭제되었거나 잘못된 요청입니다.');
+    }
 
-    console.log(isExist);
+    await this.templateRepository.delete({ id, templateType: template });
   }
 }

@@ -20,6 +20,10 @@ export class AnswerService {
   constructor(
     @InjectRepository(TemplateMetaModel)
     private readonly templateMetaRepository: Repository<TemplateMetaModel>,
+    @InjectRepository(AnswerModel)
+    private readonly answerRepositorys: Repository<AnswerModel>,
+    @InjectRepository(RespondentModel)
+    private readonly RespondentRepositorys: Repository<RespondentModel>,
   ) {}
 
   async respondentPost(
@@ -39,18 +43,20 @@ export class AnswerService {
     const answerRepository = qr.manager.getRepository<AnswerModel>(AnswerModel);
     const optionRepository =
       qr.manager.getRepository<QustionOption>(QustionOption);
-    const respondentEntity = respondentRepository.create({
-      age: ageGroup,
-      gender,
-    });
 
     const existTemplate = await templateMetaRepository.findOne({
       where: { id: +id, templateType: template },
     });
 
     if (!existTemplate) {
-      throw new NotFoundException('없는 경로입니다.');
+      throw new NotFoundException('이미 삭제되었거나 잘못된 요청입니다.');
     }
+
+    const respondentEntity = respondentRepository.create({
+      age: ageGroup,
+      gender,
+      template: existTemplate,
+    });
 
     //참여자 반영
     const insertResult = await respondentRepository.save(respondentEntity);
@@ -98,6 +104,7 @@ export class AnswerService {
     const data = await this.templateMetaRepository.findOne({
       where: { id: +id, templateType: template },
       relations: [
+        'respondents',
         'questions', //항목
         'questions.options', // 문항
         'questions.response',
@@ -107,6 +114,39 @@ export class AnswerService {
       ],
     });
 
+    console.log(data);
+
+    //참여자 통계 - questions에서 뽑아오기
+    // const totalStats = this.calculateTotalRespondentStats({
+    //   id: +id,
+    //   template,
+    // });
+
+    // console.log(data);
+
+    // console.log(totalStats);
+    // const respodentCnt = await this.getRespondentCount({ template, id });
+    // console.log(respodentCnt);
+    // const tttt = await this.getRespondentStatistics({ template, id });
+    // console.log(tttt);
+    // const result = {  ...data };
+
     return data;
   }
+
+  // async calculateTotalRespondentStats({
+  //   id,
+  //   template,
+  // }: {
+  //   id: number;
+  //   template: string;
+  // }) {
+  //   const genderCount = { male: 0, female: 0 };
+  //   const ageGroups = {};
+
+  //   const test = await this.RespondentRepositorys.find({
+  //     where: { template: { id } },
+  //   });
+  //   console.log(test.length);
+  // }
 }

@@ -1,5 +1,12 @@
 import { AnswerModel } from 'src/answer/entries/answer.entity';
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToMany,
+  ManyToOne,
+} from 'typeorm';
 
 export enum GenderGrop {
   MALE = 'male',
@@ -31,4 +38,10 @@ export class RespondentModel {
   //응답
   @OneToMany(() => AnswerModel, (answer) => answer.repondent)
   answer: AnswerModel[];
+
+  @ManyToOne(() => TemplateMetaModel, (template) => template.respondents, {
+    onDelete: 'CASCADE',
+  })
+  // @Exclude({ toPlainOnly: true })
+  template: TemplateMetaModel;
 }

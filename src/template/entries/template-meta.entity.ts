@@ -1,3 +1,4 @@
+import { RespondentModel } from 'src/answer/entries/respondent.entity';
 import { BaseModel } from 'src/common/entries/base.entity';
 import { SurveyQuestion } from 'src/template/entries/survey/survey-questions.entity';
 import { Column, Entity, OneToMany } from 'typeorm';
@@ -34,7 +35,13 @@ export class TemplateMetaModel extends BaseModel {
   thumbnail: string;
 
   @OneToMany(() => SurveyQuestion, (questions) => questions.templateMeta, {
-    cascade: true,
+    cascade: ['remove'],
   })
   questions: SurveyQuestion[];
+
+  //참여자 통계를 위한 관계서정함
+  @OneToMany(() => RespondentModel, (respondent) => respondent.template, {
+    cascade: ['remove'],
+  })
+  respondents: RespondentModel[];
 }
