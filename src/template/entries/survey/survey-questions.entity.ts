@@ -1,4 +1,4 @@
-import { AnswerModel } from 'src/answer/entries/answer.entity';
+import { AnswerModel } from 'src/answer/entries/responseSelect.entity';
 import { QustionOption } from 'src/template/entries/survey/survey-option.entity';
 import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
 import {

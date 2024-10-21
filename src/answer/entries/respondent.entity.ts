@@ -1,4 +1,5 @@
-import { AnswerModel } from 'src/answer/entries/answer.entity';
+import { AnswerModel } from 'src/answer/entries/responseSelect.entity';
+import { responseText } from 'src/answer/entries/responseText.entity';
 import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
 import {
   Entity,
@@ -35,9 +36,13 @@ export class RespondentModel {
   @Column({ enum: GenderGrop, nullable: true })
   gender: GenderGrop;
 
-  //응답
+  //객관식 응답
   @OneToMany(() => AnswerModel, (answer) => answer.repondent)
   answer: AnswerModel[];
+
+  //주관식 응답
+  @OneToMany(() => responseText, (textAnswer) => textAnswer.respondent)
+  textAnswer: responseText;
 
   @ManyToOne(() => TemplateMetaModel, (template) => template.respondents, {
     onDelete: 'CASCADE',

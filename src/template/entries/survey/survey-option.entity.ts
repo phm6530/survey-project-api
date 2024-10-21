@@ -1,4 +1,4 @@
-import { AnswerModel } from 'src/answer/entries/answer.entity';
+import { AnswerModel } from 'src/answer/entries/responseSelect.entity';
 import {
   QuestionTypes,
   SurveyQuestion,

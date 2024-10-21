@@ -15,8 +15,9 @@ import { SurveyQuestion } from 'src/template/entries/survey/survey-questions.ent
 import { QustionOption } from 'src/template/entries/survey/survey-option.entity';
 
 import { AnswerModule } from './answer/answer.module';
-import { AnswerModel } from 'src/answer/entries/answer.entity';
+import { AnswerModel } from 'src/answer/entries/responseSelect.entity';
 import { RespondentModel } from 'src/answer/entries/respondent.entity';
+import { responseText } from 'src/answer/entries/responseText.entity';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { RespondentModel } from 'src/answer/entries/respondent.entity';
         QustionOption,
         AnswerModel,
         RespondentModel,
+        responseText,
       ],
       synchronize: true,
     }),

@@ -7,7 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { AnswerPostParams } from 'src/answer/answer.controller';
 
 import { CreateAnswerDto } from 'src/answer/dto/CreateAnswer.dto';
-import { AnswerModel } from 'src/answer/entries/answer.entity';
+import { AnswerModel } from 'src/answer/entries/responseSelect.entity';
 import { RespondentModel } from 'src/answer/entries/respondent.entity';
 import { QustionOption } from 'src/template/entries/survey/survey-option.entity';
 import { SurveyQuestion } from 'src/template/entries/survey/survey-questions.entity';

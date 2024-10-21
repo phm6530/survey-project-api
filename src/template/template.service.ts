@@ -7,7 +7,10 @@ import {
 } from 'src/template/entries/template-meta.entity';
 import { QueryRunner, Repository } from 'typeorm';
 import { SurveyQuestionDto } from 'src/template/dto/survey-question.dto';
-import { SurveyQuestion } from 'src/template/entries/survey/survey-questions.entity';
+import {
+  QuestionTypes,
+  SurveyQuestion,
+} from 'src/template/entries/survey/survey-questions.entity';
 import { QustionOption } from 'src/template/entries/survey/survey-option.entity';
 import { QuestionOptionsDto } from 'src/template/dto/survey-option.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -74,16 +77,30 @@ export class TemplateService {
 
   //get By Id
   async getTemplateById(templetType: TemplateType, id: number) {
-    const item = await this.templateRepository.findOne({
+    const isExistTemplate = await this.templateRepository.findOne({
       where: { id, templateType: templetType },
       relations: ['questions', 'questions.options', 'respondents'],
     });
 
-    if (!item) {
+    if (!isExistTemplate) {
       throw new NotFoundException('없는페이지');
     }
 
-    return item;
+    //Options 제거
+    const { questions, ...rest } = isExistTemplate;
+    const questionsTemp = questions.map((qs) => {
+      if (qs.type === QuestionTypes.TEXT) {
+        //주관식 Options 프로퍼티 삭제
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { options, ...rest } = qs;
+        return rest;
+      }
+      return qs;
+    });
+
+    const resultTemplate = { ...rest, questions: questionsTemp };
+
+    return resultTemplate;
   }
 
   async deleteTemplateById({ template, id }: GetTemplateParams) {
