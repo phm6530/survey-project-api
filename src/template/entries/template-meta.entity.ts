@@ -33,6 +33,8 @@ export class TemplateMetaModel extends BaseModel {
   @Column()
   thumbnail: string;
 
-  @OneToMany(() => SurveyQuestion, (questions) => questions.templateMeta)
+  @OneToMany(() => SurveyQuestion, (questions) => questions.templateMeta, {
+    cascade: true,
+  })
   questions: SurveyQuestion[];
 }

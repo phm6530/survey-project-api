@@ -30,7 +30,7 @@ export class SurveyQuestionDto extends PickType(SurveyQuestion, ['label']) {
 
   //무슨 문항인지? 주관 / 객관
   @ValidateIf((o) => o.type === QuestionTypes.SELECT) // 객관식일 때만 options 필수
-  @ArrayMinSize(2, { message: '객관식은 2가지 이상' })
+  @ArrayMinSize(2, { message: '객관식은 항목을 최소 2가지 이상 설정해주세요' })
   @ValidateNested({ each: true })
   @Type(() => QuestionOptionsDto)
   options?: QuestionOptionsDto[];

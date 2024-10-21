@@ -43,9 +43,10 @@ export class SurveyQuestion {
   //객관식 일 때 설문 항목
   @OneToMany(() => QustionOption, (option) => option.question, {
     nullable: true,
+    cascade: true,
   })
   options: QustionOption[];
 
-  @OneToMany(() => AnswerModel, (answer) => answer.question)
+  @OneToMany(() => AnswerModel, (answer) => answer.question, { cascade: true })
   response: AnswerModel[];
 }

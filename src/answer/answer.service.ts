@@ -13,7 +13,7 @@ import { QustionOption } from 'src/template/entries/survey/survey-option.entity'
 import { SurveyQuestion } from 'src/template/entries/survey/survey-questions.entity';
 import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
 
-import { QueryRunner, Repository } from 'typeorm';
+import { In, QueryRunner, Repository } from 'typeorm';
 
 @Injectable()
 export class AnswerService {
@@ -55,29 +55,42 @@ export class AnswerService {
     //참여자 반영
     const insertResult = await respondentRepository.save(respondentEntity);
 
+    // 아이디 추출
+    const questionIds = answers.map((e) => e.questionId);
+
+    //미리 해당 Template에 맞는 Question의 존재 확인
+    const questions = await questionsRepository.find({
+      where: { id: In(questionIds), templateMeta: { id: existTemplate.id } },
+    });
+
     for (const item of answers) {
       const { questionId, type, optionId, answer } = item;
 
-      //해당 Template에 맞는 Question의 존재 확인
-      const existQuestion = await questionsRepository.findOne({
-        where: { id: questionId, templateMeta: existTemplate },
-      });
+      const existQuestion = questions.find((e) => e.id === questionId);
+      if (!existQuestion)
+        throw new BadRequestException('없는 항목 잘못된 요청입니다.');
 
-      if (!existQuestion) throw new BadRequestException('잘못된 요청입니다.');
+      if (type === 'text') {
+        const entity = answerRepository.create({
+          question: { id: existQuestion.id },
+          answer,
+          repondent: insertResult,
+        });
+        await answerRepository.save(entity);
+      } else if (type === 'select') {
+        const existOption = await optionRepository.findOne({
+          where: { id: optionId },
+        });
 
-      const existOption = await optionRepository.findOne({
-        where: { id: optionId },
-      });
-
-      // Add Answer Entity
-      const entity = answerRepository.create({
-        question: existQuestion,
-        answer,
-        option: existOption,
-        repondent: insertResult,
-      });
-
-      await answerRepository.save(entity);
+        // Add Answer Entity
+        const entity = answerRepository.create({
+          question: { id: existQuestion.id },
+          answer,
+          option: { id: existOption.id },
+          repondent: insertResult,
+        });
+        await answerRepository.save(entity);
+      }
     }
   }
 
@@ -87,6 +100,8 @@ export class AnswerService {
       relations: [
         'questions', //항목
         'questions.options', // 문항
+        'questions.response',
+        'questions.response.repondent',
         'questions.options.response', // 응답
         'questions.options.response.repondent', //참여자
       ],

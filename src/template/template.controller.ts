@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { TemplateService } from './template.service';
 import { CreateTemplateDto } from 'src/template/dto/create-template.dto';
 import { DataSource } from 'typeorm';
@@ -19,6 +27,7 @@ export class TemplateController {
     private readonly dataSource: DataSource,
   ) {}
 
+  //리스트 가져오기
   @Get()
   async getList(@Query() query?: QsGetList) {
     const { sort } = query;
@@ -61,7 +70,10 @@ export class TemplateController {
     return this.templateService.getTemplateById(template, id);
   }
 
-  //응답
-  // @Post(':template/:id')
-  // postAnswer(@Param() Params: any, @Body() body: any) {}
+  // 삭제
+  @Delete(':template/:id')
+  deleteTemplate(@Param() params: GetTemplateParams) {
+    const { template, id } = params;
+    return this.templateService.deleteTemplateById({ template, id });
+  }
 }

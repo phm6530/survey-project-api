@@ -11,6 +11,7 @@ import { SurveyQuestion } from 'src/template/entries/survey/survey-questions.ent
 import { QustionOption } from 'src/template/entries/survey/survey-option.entity';
 import { QuestionOptionsDto } from 'src/template/dto/survey-option.dto';
 import { InjectRepository } from '@nestjs/typeorm';
+import { GetTemplateParams } from 'src/template/template.controller';
 
 @Injectable()
 export class TemplateService {
@@ -83,5 +84,13 @@ export class TemplateService {
     }
 
     return item;
+  }
+
+  async deleteTemplateById({ template, id }: GetTemplateParams) {
+    const isExist = await this.templateRepository.findOne({
+      where: { id, templateType: template },
+    });
+
+    console.log(isExist);
   }
 }
