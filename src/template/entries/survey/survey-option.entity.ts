@@ -34,7 +34,7 @@ export class QustionOption {
   })
   question: SurveyQuestion;
 
-  @OneToMany(() => AnswerModel, (response) => response.question, {
+  @OneToMany(() => AnswerModel, (answer) => answer.question, {
     cascade: ['remove'],
   })
   response: AnswerModel[];

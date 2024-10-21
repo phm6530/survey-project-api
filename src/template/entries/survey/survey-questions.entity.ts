@@ -1,4 +1,4 @@
-import { AnswerModel } from 'src/answer/entries/responseSelect.entity';
+import { responseText } from 'src/answer/entries/responseText.entity';
 import { QustionOption } from 'src/template/entries/survey/survey-option.entity';
 import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
 import {
@@ -46,13 +46,14 @@ export class SurveyQuestion {
   @Column({ nullable: true })
   pictrue: string;
 
-  //객관식 일 때 설문 항목
+  //객관식 일 때 Option 연결
   @OneToMany(() => QustionOption, (option) => option.question, {
     nullable: true,
     cascade: ['remove'],
   })
-  options: QustionOption[];
+  options?: QustionOption[];
 
-  @OneToMany(() => AnswerModel, (answer) => answer.question, { cascade: true })
-  response: AnswerModel[];
+  //주관식일때는 Answer로 연결
+  @OneToMany(() => responseText, (answer) => answer.question, { cascade: true })
+  textAnswers: responseText[];
 }

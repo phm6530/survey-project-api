@@ -72,7 +72,9 @@ export class TemplateService {
 
   // get List
   async getlist() {
-    return await this.templateRepository.find({ relations: ['respondents'] });
+    return await this.templateRepository.find({
+      relations: ['respondents'],
+    });
   }
 
   //get By Id
@@ -88,6 +90,7 @@ export class TemplateService {
 
     //Options 제거
     const { questions, ...rest } = isExistTemplate;
+
     const questionsTemp = questions.map((qs) => {
       if (qs.type === QuestionTypes.TEXT) {
         //주관식 Options 프로퍼티 삭제
@@ -98,9 +101,7 @@ export class TemplateService {
       return qs;
     });
 
-    const resultTemplate = { ...rest, questions: questionsTemp };
-
-    return resultTemplate;
+    return { ...rest, questions: questionsTemp };
   }
 
   async deleteTemplateById({ template, id }: GetTemplateParams) {

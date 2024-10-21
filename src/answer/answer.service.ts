@@ -10,10 +10,14 @@ import { CreateAnswerDto } from 'src/answer/dto/CreateAnswer.dto';
 import { AnswerModel } from 'src/answer/entries/responseSelect.entity';
 import { RespondentModel } from 'src/answer/entries/respondent.entity';
 import { QustionOption } from 'src/template/entries/survey/survey-option.entity';
-import { SurveyQuestion } from 'src/template/entries/survey/survey-questions.entity';
+import {
+  QuestionTypes,
+  SurveyQuestion,
+} from 'src/template/entries/survey/survey-questions.entity';
 import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
 
 import { In, QueryRunner, Repository } from 'typeorm';
+import { responseText } from 'src/answer/entries/responseText.entity';
 
 @Injectable()
 export class AnswerService {
@@ -40,7 +44,13 @@ export class AnswerService {
       qr.manager.getRepository<SurveyQuestion>(SurveyQuestion);
     const respondentRepository =
       qr.manager.getRepository<RespondentModel>(RespondentModel);
+
+    //주관식
     const answerRepository = qr.manager.getRepository<AnswerModel>(AnswerModel);
+
+    const responseTextRepository =
+      qr.manager.getRepository<responseText>(responseText);
+
     const optionRepository =
       qr.manager.getRepository<QustionOption>(QustionOption);
 
@@ -77,25 +87,28 @@ export class AnswerService {
         throw new BadRequestException('없는 항목 잘못된 요청입니다.');
 
       if (type === 'text') {
-        const entity = answerRepository.create({
-          question: { id: existQuestion.id },
+        //주관식 반영
+        const entity = responseTextRepository.create({
           answer,
-          repondent: insertResult,
+          question: { id: existQuestion.id },
+          respondent: { id: insertResult.id },
         });
-        await answerRepository.save(entity);
+        await responseTextRepository.save(entity);
       } else if (type === 'select') {
+        //객관식반영
         const existOption = await optionRepository.findOne({
           where: { id: optionId },
         });
 
         // Add Answer Entity
         const entity = answerRepository.create({
-          question: { id: existQuestion.id },
+          question: { id: existOption.id },
           answer,
-          option: { id: existOption.id },
           repondent: insertResult,
         });
         await answerRepository.save(entity);
+      } else {
+        throw new BadRequestException('없는 항목 잘못된 요청입니다.') as never;
       }
     }
   }
@@ -104,49 +117,53 @@ export class AnswerService {
     const data = await this.templateMetaRepository.findOne({
       where: { id: +id, templateType: template },
       relations: [
-        'respondents',
-        'questions', //항목
-        'questions.options', // 문항
-        'questions.response',
-        'questions.response.repondent',
-        'questions.options.response', // 응답
-        'questions.options.response.repondent', //참여자
+        'respondents', //참여자
+        'questions',
+        //주관식
+        'questions.textAnswers',
+        'questions.textAnswers.respondent',
+
+        //객관식
+        'questions.options',
+        'questions.options.response',
+        'questions.options.response.repondent',
       ],
     });
 
-    console.log(data);
+    const countByGenderAndAge = (
+      targetArr: { age: number; gender: string }[],
+    ) => {
+      const count = { female: {}, male: {} };
+      targetArr.forEach(({ age, gender }) => {
+        if (!count[gender][age]) {
+          count[gender][age] = 1;
+        } else {
+          count[gender][age]++;
+        }
+      });
+      return count;
+    };
 
-    //참여자 통계 - questions에서 뽑아오기
-    // const totalStats = this.calculateTotalRespondentStats({
-    //   id: +id,
-    //   template,
-    // });
+    const { questions, respondents, ...rest } = data;
+    const users = countByGenderAndAge(respondents);
 
-    // console.log(data);
+    const newQuestions = questions.map((qs) => {
+      const { options, textAnswers, type, ...rest } = qs;
 
-    // console.log(totalStats);
-    // const respodentCnt = await this.getRespondentCount({ template, id });
-    // console.log(respodentCnt);
-    // const tttt = await this.getRespondentStatistics({ template, id });
-    // console.log(tttt);
-    // const result = {  ...data };
+      if (type === QuestionTypes.SELECT) {
+        const newOptions = options.map((e) => {
+          //젠더정리..
+          const users = countByGenderAndAge(e.response.map((r) => r.repondent));
+          return { ...e, response: users };
+        });
+        return { type, ...rest, options: newOptions };
+      } else if (type === QuestionTypes.TEXT) {
+        return { type, ...rest, textAnswers }; // 여기서는 options를 포함하지 않음
+      } else {
+        throw new BadRequestException('Invalid question type');
+      }
+    });
 
-    return data;
+    return { ...rest, respodents: users, questions: newQuestions };
   }
-
-  // async calculateTotalRespondentStats({
-  //   id,
-  //   template,
-  // }: {
-  //   id: number;
-  //   template: string;
-  // }) {
-  //   const genderCount = { male: 0, female: 0 };
-  //   const ageGroups = {};
-
-  //   const test = await this.RespondentRepositorys.find({
-  //     where: { template: { id } },
-  //   });
-  //   console.log(test.length);
-  // }
 }

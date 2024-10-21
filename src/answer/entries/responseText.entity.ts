@@ -1,15 +1,18 @@
-import { IsString } from 'class-validator';
 import { RespondentModel } from 'src/answer/entries/respondent.entity';
-import { Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { SurveyQuestion } from 'src/template/entries/survey/survey-questions.entity';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class responseText {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @IsString()
+  @Column()
   answer: string;
 
-  @ManyToOne(() => RespondentModel)
-  respondent: RespondentModel[];
+  @ManyToOne(() => RespondentModel, (respondent) => respondent.textAnswers)
+  respondent: RespondentModel;
+
+  @ManyToOne(() => SurveyQuestion, (question) => question.textAnswers)
+  question: SurveyQuestion;
 }

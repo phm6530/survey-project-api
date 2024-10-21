@@ -41,7 +41,7 @@ export class TemplateController {
     @Param('template') template: TemplateType,
     @Body() body: CreateTemplateDto,
   ) {
-    const result = await withTransaction(this.dataSource, async (qr) => {
+    const templateId = await withTransaction(this.dataSource, async (qr) => {
       const { questions, ...metadata } = body;
 
       if (template === 'survey') {
@@ -53,13 +53,13 @@ export class TemplateController {
 
         //Questions
         await this.templateService.createSurveyQustions(questions, qr, meta);
-        return true;
+        return meta.id;
       }
     });
 
     return {
       statusCode: 201,
-      data: result,
+      data: { templateId },
     };
   }
 

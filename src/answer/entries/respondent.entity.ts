@@ -42,7 +42,7 @@ export class RespondentModel {
 
   //주관식 응답
   @OneToMany(() => responseText, (textAnswer) => textAnswer.respondent)
-  textAnswer: responseText;
+  textAnswers: responseText;
 
   @ManyToOne(() => TemplateMetaModel, (template) => template.respondents, {
     onDelete: 'CASCADE',
