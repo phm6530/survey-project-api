@@ -15,6 +15,7 @@ import { QustionOption } from 'src/template/entries/survey/survey-option.entity'
 import { QuestionOptionsDto } from 'src/template/dto/survey-option.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GetTemplateParams } from 'src/template/template.controller';
+import { respondentsGroup } from 'util/respondentsFilter.util';
 
 @Injectable()
 export class TemplateService {
@@ -82,19 +83,14 @@ export class TemplateService {
     const tester = (await data).map((templateInfo) => {
       const { respondents, ...rest } = templateInfo;
 
-      const filterData = { female: {}, male: {} };
-
-      respondents.forEach((e) => {
-        if (!filterData[e.gender][e.age]) {
-          filterData[e.gender][e.age] = 1;
-          return;
-        }
-        filterData[e.gender][e.age]++;
-      });
+      const respondentsGroupData = respondentsGroup(respondents);
 
       return {
         ...rest,
-        respondents: { allCnt: respondents.length, detail: filterData },
+        respondents: {
+          allCnt: respondents.length,
+          detail: respondentsGroupData,
+        },
       };
     });
 
@@ -113,7 +109,7 @@ export class TemplateService {
     }
 
     //Options 제거
-    const { questions, ...rest } = isExistTemplate;
+    const { questions, respondents, ...rest } = isExistTemplate;
 
     const questionsTemp = questions.map((qs) => {
       if (qs.type === QuestionTypes.TEXT) {
@@ -125,9 +121,16 @@ export class TemplateService {
       return qs;
     });
 
-    return { ...rest, questions: questionsTemp };
+    const respodentsGroupData = respondentsGroup(respondents);
+
+    return {
+      ...rest,
+      respondents: { allCnt: respondents.length, defailt: respodentsGroupData },
+      questions: questionsTemp,
+    };
   }
 
+  //Template Delete
   async deleteTemplateById({ template, id }: GetTemplateParams) {
     const isExist = await this.templateRepository.findOne({
       where: { id, templateType: template },
@@ -135,7 +138,6 @@ export class TemplateService {
     if (!isExist) {
       throw new NotFoundException('이미 삭제되었거나 잘못된 요청입니다.');
     }
-
     await this.templateRepository.delete({ id, templateType: template });
   }
 }

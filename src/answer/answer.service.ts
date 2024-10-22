@@ -10,11 +10,15 @@ import { CreateAnswerDto } from 'src/answer/dto/CreateAnswer.dto';
 import { AnswerModel } from 'src/answer/entries/responseSelect.entity';
 import { RespondentModel } from 'src/answer/entries/respondent.entity';
 import { QustionOption } from 'src/template/entries/survey/survey-option.entity';
-import { SurveyQuestion } from 'src/template/entries/survey/survey-questions.entity';
+import {
+  QuestionTypes,
+  SurveyQuestion,
+} from 'src/template/entries/survey/survey-questions.entity';
 import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
 
 import { In, QueryRunner, Repository } from 'typeorm';
 import { responseText } from 'src/answer/entries/responseText.entity';
+import { respondentsGroup } from 'util/respondentsFilter.util';
 
 @Injectable()
 export class AnswerService {
@@ -131,41 +135,40 @@ export class AnswerService {
       throw new NotFoundException('이미 삭제되었거나 잘못된 요청입니다.');
     }
 
-    // const countByGenderAndAge = (
-    //   targetArr: { age: number; gender: string }[],
-    // ) => {
-    //   const count = { female: {}, male: {} };
-    //   targetArr.forEach(({ age, gender }) => {
-    //     if (!count[gender][age]) {
-    //       count[gender][age] = 1;
-    //     } else {
-    //       count[gender][age]++;
-    //     }
-    //   });
-    //   return count;
-    // };
+    const { questions, respondents, ...rest } = data;
 
-    // const { questions, respondents, ...rest } = data;
-    // const users = countByGenderAndAge(respondents);
+    //O(n)
+    const respodentsGroupData = respondentsGroup(respondents);
 
-    // const newQuestions = questions.map((qs) => {
-    //   const { options, textAnswers, type, ...rest } = qs;
+    //template
+    const newQuestions = questions.map((qs) => {
+      const { textAnswers, options, ...rest } = qs;
 
-    //   if (type === QuestionTypes.SELECT) {
-    //     const newOptions = options.map((e) => {
-    //       //젠더정리..
-    //       const users = countByGenderAndAge(e.response.map((r) => r.repondent));
-    //       return { ...e, response: users };
-    //     });
-    //     return { type, ...rest, options: newOptions };
-    //   } else if (type === QuestionTypes.TEXT) {
-    //     return { type, ...rest, textAnswers }; // 여기서는 options를 포함하지 않음
-    //   } else {
-    //     throw new BadRequestException('Invalid question type');
-    //   }
-    // });
+      if (qs.type === QuestionTypes.SELECT) {
+        const newOptions = options.map((op) => {
+          const { response, ...rest } = op;
+          const groupData = response.map((e) => {
+            return {
+              gender: e.repondent.gender,
+              age: e.repondent.age,
+            };
+          });
+          const responseGroupData = respondentsGroup(groupData);
+          return { ...rest, response: responseGroupData };
+        });
 
-    // return { ...rest, respodents: users, questions: newQuestions };
-    return data;
+        return { ...rest, options: newOptions };
+      } else if (qs.type === QuestionTypes.TEXT) {
+        return { ...rest, textAnswers };
+      } else {
+        throw new BadRequestException('잘못된 요청입니다..');
+      }
+    });
+
+    return {
+      ...rest,
+      respondents: { allCnt: respondents.length, detail: respodentsGroupData },
+      questions: newQuestions,
+    };
   }
 }
