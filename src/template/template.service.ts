@@ -72,9 +72,33 @@ export class TemplateService {
 
   // get List
   async getlist() {
-    return await this.templateRepository.find({
-      relations: ['respondents'],
+    //get List..
+    const data = this.templateRepository
+      .createQueryBuilder('template')
+      .leftJoin('template.respondents', 'respondents')
+      .addSelect(['respondents.id', 'respondents.gender', 'respondents.age'])
+      .getMany();
+
+    const tester = (await data).map((templateInfo) => {
+      const { respondents, ...rest } = templateInfo;
+
+      const filterData = { female: {}, male: {} };
+
+      respondents.forEach((e) => {
+        if (!filterData[e.gender][e.age]) {
+          filterData[e.gender][e.age] = 1;
+          return;
+        }
+        filterData[e.gender][e.age]++;
+      });
+
+      return {
+        ...rest,
+        respondents: { allCnt: respondents.length, detail: filterData },
+      };
     });
+
+    return tester;
   }
 
   //get By Id
