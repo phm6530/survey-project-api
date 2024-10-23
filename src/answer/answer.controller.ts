@@ -1,9 +1,9 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { AnswerService } from './answer.service';
-import { TemplateType } from 'src/template/entries/template-meta.entity';
 import { withTransaction } from 'lib/withTransaction.lib';
 import { DataSource, QueryRunner } from 'typeorm';
 import { CreateAnswerDto } from 'src/answer/dto/CreateAnswer.dto';
+import { TemplateType } from 'type/template';
 
 export type AnswerPostParams = {
   template: TemplateType;

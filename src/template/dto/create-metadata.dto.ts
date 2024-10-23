@@ -1,10 +1,8 @@
 import { PickType } from '@nestjs/mapped-types';
 import { Type } from 'class-transformer';
 import { IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator';
-import {
-  TemplateMetaModel,
-  TemplateType,
-} from 'src/template/entries/template-meta.entity';
+import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
+import { TemplateType } from 'type/template';
 
 //template 메타데이터
 export class CreateMetadataDto extends PickType(TemplateMetaModel, [

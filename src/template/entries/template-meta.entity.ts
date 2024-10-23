@@ -1,12 +1,9 @@
 import { RespondentModel } from 'src/answer/entries/respondent.entity';
+import { CommentModel } from 'src/comment/entries/comment.entity';
 import { BaseModel } from 'src/common/entries/base.entity';
 import { SurveyQuestion } from 'src/template/entries/survey/survey-questions.entity';
+import { TemplateType } from 'type/template';
 import { Column, Entity, OneToMany } from 'typeorm';
-
-export enum TemplateType {
-  SURVEY = 'survey',
-  RANK = 'rank',
-}
 
 @Entity('template_metadata')
 export class TemplateMetaModel extends BaseModel {
@@ -44,4 +41,8 @@ export class TemplateMetaModel extends BaseModel {
     cascade: ['remove'],
   })
   respondents: RespondentModel[];
+
+  //템플릿에 대한 댓글
+  @OneToMany(() => CommentModel, (comment) => comment.template)
+  comments: CommentModel[];
 }

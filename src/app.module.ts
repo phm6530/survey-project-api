@@ -18,6 +18,10 @@ import { AnswerModule } from './answer/answer.module';
 import { AnswerModel } from 'src/answer/entries/responseSelect.entity';
 import { RespondentModel } from 'src/answer/entries/respondent.entity';
 import { responseText } from 'src/answer/entries/responseText.entity';
+import { CommentModule } from './comment/comment.module';
+import { CommentModel } from 'src/comment/entries/comment.entity';
+import { ReplyModel } from 'src/comment/entries/reply.entity';
+import { AdminModel } from 'src/user/entries/admin.entity';
 
 @Module({
   imports: [
@@ -46,6 +50,9 @@ import { responseText } from 'src/answer/entries/responseText.entity';
         AnswerModel,
         RespondentModel,
         responseText,
+        CommentModel,
+        ReplyModel,
+        AdminModel,
       ],
       synchronize: true,
     }),
@@ -54,6 +61,7 @@ import { responseText } from 'src/answer/entries/responseText.entity';
     UserModule,
     TemplateModule,
     AnswerModule,
+    CommentModule,
   ],
   controllers: [AppController],
   providers: [AppService],

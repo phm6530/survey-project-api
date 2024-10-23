@@ -1,10 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { CreateTemplateDto } from 'src/template/dto/create-template.dto';
-import {
-  TemplateMetaModel,
-  TemplateType,
-} from 'src/template/entries/template-meta.entity';
+import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
 import { QueryRunner, Repository } from 'typeorm';
 import { SurveyQuestionDto } from 'src/template/dto/survey-question.dto';
 import {
@@ -16,6 +13,7 @@ import { QuestionOptionsDto } from 'src/template/dto/survey-option.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GetTemplateParams } from 'src/template/template.controller';
 import { respondentsGroup } from 'util/respondentsFilter.util';
+import { TemplateType } from 'type/template';
 
 @Injectable()
 export class TemplateService {

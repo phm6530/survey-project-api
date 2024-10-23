@@ -11,7 +11,7 @@ import { TemplateService } from './template.service';
 import { CreateTemplateDto } from 'src/template/dto/create-template.dto';
 import { DataSource } from 'typeorm';
 import { withTransaction } from 'lib/withTransaction.lib';
-import { TemplateType } from 'src/template/entries/template-meta.entity';
+import { TemplateType } from 'type/template';
 
 export type GetTemplateParams = {
   template: TemplateType;
@@ -43,14 +43,13 @@ export class TemplateController {
   ) {
     const templateId = await withTransaction(this.dataSource, async (qr) => {
       const { questions, ...metadata } = body;
+      //Meta
+      const meta = await this.templateService.createTemplateMeta(
+        { ...metadata },
+        qr,
+      );
 
       if (template === 'survey') {
-        //Meta
-        const meta = await this.templateService.createTemplateMeta(
-          { ...metadata },
-          qr,
-        );
-
         //Questions
         await this.templateService.createSurveyQustions(questions, qr, meta);
         return meta.id;
