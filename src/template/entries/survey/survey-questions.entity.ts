@@ -49,7 +49,6 @@ export class SurveyQuestion {
   //객관식 일 때 Option 연결
   @OneToMany(() => QustionOption, (option) => option.question, {
     nullable: true,
-    cascade: ['remove'],
   })
   options?: QustionOption[];
 

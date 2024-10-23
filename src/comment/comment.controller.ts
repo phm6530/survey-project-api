@@ -1,10 +1,11 @@
 import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from 'src/comment/dto/createComment.dto';
-import { paramsTemplateAndId } from 'type/template';
+import { paramsTemplateAndId, TemplateType } from 'type/template';
 import { withTransactions } from 'lib/withTransaction.lib';
 import { DataSource, QueryRunner } from 'typeorm';
 import { parseIntParam } from 'src/common/decorator/parseIntParam.decorator';
+import { DeleteCommentDto } from 'src/comment/dto/deleteComment.dto';
 
 @Controller('comment')
 export class CommentController {
@@ -25,15 +26,21 @@ export class CommentController {
   }
 
   @Get('/:template/:id')
-  async getCommentList(@Param() params: paramsTemplateAndId) {
+  async getCommentList(
+    @Param('template') templateType: TemplateType,
+    @parseIntParam('id') id: number,
+  ) {
     return this.commentService.getcommentList({
-      id: params.id,
-      template: params.template,
+      id,
+      template: templateType,
     });
   }
 
   @Delete('/:commentId')
-  deleteComment(@parseIntParam('commentId') id: string) {
-    return this.commentService.deleteCommentTarget(id);
+  deleteComment(
+    @parseIntParam('commentId') id: number,
+    @Body() body: DeleteCommentDto,
+  ) {
+    return this.commentService.deleteCommentTarget(id, body.password);
   }
 }

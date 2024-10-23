@@ -8,11 +8,16 @@ import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 
 @Entity()
 export class CommentModel extends BaseModel {
-  @ManyToOne(() => TemplateMetaModel, (template) => template.comments)
+  @ManyToOne(() => TemplateMetaModel, (template) => template.comments, {
+    onDelete: 'CASCADE',
+  })
   template: TemplateMetaModel;
 
   // 댓글 작성자
-  @ManyToOne(() => UserModel, (user) => user.comments, { nullable: true })
+  @ManyToOne(() => UserModel, (user) => user.comments, {
+    nullable: true,
+    onDelete: 'CASCADE',
+  })
   user?: UserModel;
 
   // Comment
@@ -30,6 +35,8 @@ export class CommentModel extends BaseModel {
 
   //댓글와 연결할 대댓글
   //초기작성시에는 없으니까 null 허용
-  @OneToMany(() => ReplyModel, (reply) => reply.comment, { nullable: true })
+  @OneToMany(() => ReplyModel, (reply) => reply.comment, {
+    nullable: true,
+  })
   replies?: ReplyModel[];
 }

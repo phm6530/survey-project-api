@@ -29,13 +29,9 @@ export class QustionOption {
   @Column({ nullable: true })
   optionPicture: string;
 
-  @ManyToOne(() => SurveyQuestion, (Questions) => Questions.options, {
-    onDelete: 'CASCADE',
-  })
+  @ManyToOne(() => SurveyQuestion, (Questions) => Questions.options, {})
   question: SurveyQuestion;
 
-  @OneToMany(() => AnswerModel, (answer) => answer.question, {
-    cascade: ['remove'],
-  })
+  @OneToMany(() => AnswerModel, (answer) => answer.question, {})
   response: AnswerModel[];
 }

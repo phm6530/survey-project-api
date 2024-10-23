@@ -1,5 +1,5 @@
 import { ConfigService } from '@nestjs/config';
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -12,5 +12,15 @@ export class AuthService {
       password,
       parseInt(this.ConfigService.get<string>('HASH')),
     );
+  }
+
+  async verifyPassword(inputPassword: string, storedHashedPassword: string) {
+    const isVerify = await bcrypt.compare(inputPassword, storedHashedPassword);
+
+    if (!isVerify) {
+      throw new BadRequestException('비밀번호가 일치하지 않습니다.');
+    }
+
+    return isVerify;
   }
 }

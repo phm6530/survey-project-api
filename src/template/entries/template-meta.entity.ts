@@ -31,15 +31,11 @@ export class TemplateMetaModel extends BaseModel {
   @Column()
   thumbnail: string;
 
-  @OneToMany(() => SurveyQuestion, (questions) => questions.templateMeta, {
-    cascade: ['remove'],
-  })
+  @OneToMany(() => SurveyQuestion, (questions) => questions.templateMeta, {})
   questions: SurveyQuestion[];
 
   //참여자 통계를 위한 관계서정함
-  @OneToMany(() => RespondentModel, (respondent) => respondent.template, {
-    cascade: ['remove'],
-  })
+  @OneToMany(() => RespondentModel, (respondent) => respondent.template, {})
   respondents: RespondentModel[];
 
   //템플릿에 대한 댓글

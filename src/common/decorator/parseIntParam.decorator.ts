@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 
 export const parseIntParam = createParamDecorator(
-  (Key: string, ctx: ExecutionContext) => {
+  (Key: string, ctx: ExecutionContext): number => {
     const request = ctx.switchToHttp().getRequest();
     const param = request.params[Key];
 
@@ -14,6 +14,6 @@ export const parseIntParam = createParamDecorator(
     }
 
     //10진수로
-    return parseInt(param, 10);
+    return parseInt(param, 10) as number;
   },
 );

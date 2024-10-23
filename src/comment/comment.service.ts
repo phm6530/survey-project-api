@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { instanceToPlain } from 'class-transformer';
 import { AuthService } from 'src/auth/auth.service';
 import { CreateCommentDto } from 'src/comment/dto/createComment.dto';
+import { DeleteCommentDto } from 'src/comment/dto/deleteComment.dto';
 import { CommentModel } from 'src/comment/entries/comment.entity';
 import { CommonService } from 'src/common/common.service';
 import { paramsTemplateAndId } from 'type/template';
@@ -24,14 +25,24 @@ export class CommentService {
       templateType: template,
     });
 
-    const test = await this.commentRepository.find({
-      where: {
-        template: { id: isExistTemplate.id },
-      },
-      relations: ['replies', 'user'],
-    });
+    const comments = this.commentRepository
+      .createQueryBuilder('comment')
+      .leftJoinAndSelect('comment.replies', 'replies')
+      .leftJoinAndSelect('comment.user', 'wirteUser')
+      .leftJoin('replies.user', 'replywirteUser')
 
-    return instanceToPlain(test);
+      .where('comment.templateId = :templateId', {
+        templateId: isExistTemplate.id,
+      })
+      .addSelect('wirteUser.id') // comment 유저
+      .addSelect('replywirteUser.id')
+
+      .orderBy('comment.id', 'DESC')
+      .addOrderBy('replies.id', 'DESC') //  reply 유저
+
+      .getMany();
+
+    return instanceToPlain(comments);
   }
 
   //댓글 생성
@@ -61,8 +72,23 @@ export class CommentService {
     return instanceToPlain(await repository.save(entity));
   }
 
-  async deleteCommentTarget(commentId: string) {
-    console.log(typeof commentId);
-    return commentId;
+  async deleteCommentTarget(
+    id: number,
+    password: DeleteCommentDto['password'],
+  ) {
+    const isExistComment = await this.commentRepository.findOne({
+      where: { id },
+    });
+
+    if (!isExistComment) {
+      throw new NotFoundException('이미 삭제되었거나 잘못된 요청입니다');
+    }
+
+    await this.authService.verifyPassword(
+      password,
+      (await isExistComment).password,
+    );
+
+    return await this.commentRepository.delete({ id });
   }
 }
