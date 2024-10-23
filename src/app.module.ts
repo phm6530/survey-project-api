@@ -20,8 +20,9 @@ import { RespondentModel } from 'src/answer/entries/respondent.entity';
 import { responseText } from 'src/answer/entries/responseText.entity';
 import { CommentModule } from './comment/comment.module';
 import { CommentModel } from 'src/comment/entries/comment.entity';
-import { ReplyModel } from 'src/comment/entries/reply.entity';
+import { ReplyModel } from 'src/reply/entries/reply.entity';
 import { AdminModel } from 'src/user/entries/admin.entity';
+import { ReplyModule } from './reply/reply.module';
 
 @Module({
   imports: [
@@ -62,6 +63,7 @@ import { AdminModel } from 'src/user/entries/admin.entity';
     TemplateModule,
     AnswerModule,
     CommentModule,
+    ReplyModule,
   ],
   controllers: [AppController],
   providers: [AppService],

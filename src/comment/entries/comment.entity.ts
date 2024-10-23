@@ -1,6 +1,6 @@
 import { Exclude } from 'class-transformer';
 import { IsNotEmpty, IsString, ValidateIf } from 'class-validator';
-import { ReplyModel } from 'src/comment/entries/reply.entity';
+import { ReplyModel } from 'src/reply/entries/reply.entity';
 import { BaseModel } from 'src/common/entries/base.entity';
 import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
 import { UserModel } from 'src/user/entries/user.entity';
@@ -16,14 +16,15 @@ export class CommentModel extends BaseModel {
   user?: UserModel;
 
   // Comment
-  @Column()
+  @IsNotEmpty({ message: '댓글은 비워둘 수 없습니다.' })
+  @Column({ length: 1000 })
   @IsString()
   comment: string;
 
   // 익명일 시에는 password 받아야함
   @Column({ nullable: true })
-  @Exclude({ toPlainOnly: true })
   @ValidateIf((o) => !o.user)
+  @Exclude({ toPlainOnly: true })
   @IsNotEmpty({ message: '비회원은 비밀번호를 입력해야 합니다.' })
   password: string;
 

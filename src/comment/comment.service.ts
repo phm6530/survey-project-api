@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { instanceToPlain } from 'class-transformer';
+import { AuthService } from 'src/auth/auth.service';
 import { CreateCommentDto } from 'src/comment/dto/createComment.dto';
 import { CommentModel } from 'src/comment/entries/comment.entity';
 import { CommonService } from 'src/common/common.service';
@@ -12,8 +14,27 @@ export class CommentService {
     private readonly commonService: CommonService,
     @InjectRepository(CommentModel)
     private readonly commentRepository: Repository<CommentModel>,
+    private readonly authService: AuthService,
   ) {}
 
+  //댓글 리스트 가져오기
+  async getcommentList({ id, template }: paramsTemplateAndId) {
+    const isExistTemplate = await this.commonService.isExistTemplate({
+      id: id,
+      templateType: template,
+    });
+
+    const test = await this.commentRepository.find({
+      where: {
+        template: { id: isExistTemplate.id },
+      },
+      relations: ['replies', 'user'],
+    });
+
+    return instanceToPlain(test);
+  }
+
+  //댓글 생성
   async createComment(
     params: paramsTemplateAndId,
     body: CreateCommentDto,
@@ -31,9 +52,17 @@ export class CommentService {
       template: { id: template.id },
       comment,
       user: user ? { id: +user.id } : null,
-      password: !user ? password : null,
+      password: !user
+        ? await this.authService.hashTransformPassword(password)
+        : null,
     });
 
-    await repository.save(entity);
+    //패스워드 직렬화 제거
+    return instanceToPlain(await repository.save(entity));
+  }
+
+  async deleteCommentTarget(commentId: string) {
+    console.log(typeof commentId);
+    return commentId;
   }
 }
