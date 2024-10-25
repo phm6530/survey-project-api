@@ -30,9 +30,12 @@ export class TemplateController {
   //리스트 가져오기
   @Get()
   async getList(@Query() query?: QsGetList) {
-    const { sort } = query;
-    console.log(sort);
-    return await this.templateService.getlist();
+    console.log(query);
+
+    // await new Promise((resolve) => setTimeout(resolve, 3000));
+    const data = await this.templateService.getlist();
+    console.log(data);
+    return data;
   }
 
   // 설문조사 템플릿 생성

@@ -30,6 +30,7 @@ export class CommentController {
     @Param('template') templateType: TemplateType,
     @parseIntParam('id') id: number,
   ) {
+    console.count('댓글 가져오기');
     return this.commentService.getcommentList({
       id,
       template: templateType,

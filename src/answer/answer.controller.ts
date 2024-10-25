@@ -35,9 +35,16 @@ export class AnswerController {
     const result = await withTransaction(
       this.dataSource,
       async (qr: QueryRunner) => {
-        return await this.answerService.respondentPost(params, body, qr);
+        const results = await this.answerService.respondentPost(
+          params,
+          body,
+          qr,
+        );
+        console.log(results);
+        return results;
       },
     );
+    console.log(result);
     return result;
   }
 

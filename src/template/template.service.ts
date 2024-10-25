@@ -97,10 +97,17 @@ export class TemplateService {
 
   //get By Id
   async getTemplateById(templetType: TemplateType, id: number) {
-    const isExistTemplate = await this.templateRepository.findOne({
-      where: { id, templateType: templetType },
-      relations: ['questions', 'questions.options', 'respondents'],
-    });
+    const isExistTemplate = await this.templateRepository
+      .createQueryBuilder('template')
+      .leftJoinAndSelect('template.questions', 'questions')
+      .leftJoinAndSelect('questions.options', 'options') // questions와 options 간의 관계 추가
+      .leftJoinAndSelect('template.respondents', 'respondents')
+      .where('template.id = :id', { id })
+      .andWhere('template.templateType = :templateType', {
+        templateType: templetType,
+      })
+      .orderBy('questions', 'ASC')
+      .getOne();
 
     if (!isExistTemplate) {
       throw new NotFoundException('없는페이지');

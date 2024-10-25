@@ -25,10 +25,12 @@ export class AnswerService {
   constructor(
     @InjectRepository(TemplateMetaModel)
     private readonly templateMetaRepository: Repository<TemplateMetaModel>,
-    @InjectRepository(AnswerModel)
-    private readonly answerRepositorys: Repository<AnswerModel>,
-    @InjectRepository(RespondentModel)
-    private readonly RespondentRepositorys: Repository<RespondentModel>,
+    // @InjectRepository(AnswerModel)
+    // private readonly answerRepositorys: Repository<AnswerModel>,
+    // @InjectRepository(RespondentModel)
+    // private readonly RespondentRepositorys: Repository<RespondentModel>,
+    @InjectRepository(responseText)
+    private readonly TextAnwersRepositorys: Repository<responseText>,
   ) {}
 
   async respondentPost(
@@ -107,7 +109,8 @@ export class AnswerService {
           answer,
           repondent: insertResult,
         });
-        await answerRepository.save(entity);
+
+        return await answerRepository.save(entity);
       } else {
         throw new BadRequestException('없는 항목 잘못된 요청입니다.') as never;
       }
@@ -115,21 +118,61 @@ export class AnswerService {
   }
 
   async getAnswers({ template, id }: AnswerPostParams) {
-    const data = await this.templateMetaRepository.findOne({
-      where: { id: +id, templateType: template },
-      relations: [
-        'respondents', //참여자
-        'questions',
-        //주관식
-        'questions.textAnswers',
-        'questions.textAnswers.respondent',
+    console.count('Answers::');
+    // const data = await this.templateMetaRepository.findOne({
+    //   where: { id: +id, templateType: template },
+    //   relations: [
+    //     'respondents', //참여자
+    //     'questions',
+    //     //주관식
+    //     'questions.textAnswers',
+    //     'questions.textAnswers.respondent',
 
-        //객관식
-        'questions.options',
-        'questions.options.response',
-        'questions.options.response.repondent',
-      ],
-    });
+    //     //객관식
+    //     'questions.options',
+    //     'questions.options.response',
+    //     'questions.options.response.repondent',
+    //   ],
+    // });
+
+    const data = await this.templateMetaRepository
+      .createQueryBuilder('template')
+      .leftJoinAndSelect('template.respondents', 'respondents')
+      .leftJoinAndSelect('template.questions', 'questions')
+
+      .leftJoinAndSelect('questions.textAnswers', 'textAnswers')
+      .leftJoinAndSelect('textAnswers.respondent', 'respondent')
+
+      .leftJoinAndSelect('questions.options', 'options')
+      .leftJoinAndSelect('options.response', 'response')
+      .leftJoinAndSelect('response.repondent', 'repondent')
+
+      .where('template.id = :id', { id })
+      .andWhere('template.templateType = :type', { type: template })
+      .orderBy('questions.id', 'ASC')
+      .getOne();
+
+    if (data && data.questions) {
+      const questions = data.questions;
+      for (const qs of questions) {
+        if (qs.type === QuestionTypes.TEXT) {
+          const textAnswers = await this.getTextAnswer(qs.id);
+          qs.textAnswers = textAnswers;
+        }
+      }
+    }
+
+    // const getTextAnswers = await this.
+
+    //   .leftJoinAndSelect('template.questions', 'questions')
+
+    //   .leftJoinAndSelect('questions.options', 'options')
+    //   .leftJoinAndSelect('options.response', 'response')
+    //   .leftJoinAndSelect('response.repondent', 'repondent')
+    //   .where('template.id = :id', { id })
+    //   .andWhere('template.templateType =:templateType', { template })
+
+    //   .getOne();
 
     if (!data) {
       throw new NotFoundException('이미 삭제되었거나 잘못된 요청입니다.');
@@ -170,5 +213,25 @@ export class AnswerService {
       respondents: { allCnt: respondents.length, detail: respodentsGroupData },
       questions: newQuestions,
     };
+  }
+
+  // 10개씩
+  async getTextAnswer(id: number, page: number = 1) {
+    const limit = 10;
+
+    const result = await this.TextAnwersRepositorys.createQueryBuilder(
+      'textAnswers',
+    )
+      .leftJoinAndSelect('textAnswers.respondent', 'respondent')
+      .where('textAnswers.questionId = :questionId', {
+        questionId: id,
+      })
+      .orderBy('textAnswers.id', 'DESC')
+      .addOrderBy('respondent.id', 'DESC')
+      .skip((page - 1) * 10)
+      .take(limit)
+      .getMany();
+
+    return result;
   }
 }
