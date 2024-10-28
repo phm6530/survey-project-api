@@ -10,9 +10,13 @@ export class responseText {
   @Column()
   answer: string;
 
-  @ManyToOne(() => RespondentModel, (respondent) => respondent.textAnswers)
+  @ManyToOne(() => RespondentModel, (respondent) => respondent.textAnswers, {
+    onDelete: 'CASCADE',
+  })
   respondent: RespondentModel;
 
-  @ManyToOne(() => SurveyQuestion, (question) => question.textAnswers)
+  @ManyToOne(() => SurveyQuestion, (question) => question.textAnswers, {
+    onDelete: 'CASCADE',
+  })
   question: SurveyQuestion;
 }

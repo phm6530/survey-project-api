@@ -34,7 +34,7 @@ export class TemplateController {
 
     // await new Promise((resolve) => setTimeout(resolve, 3000));
     const data = await this.templateService.getlist();
-    console.log(data);
+
     return data;
   }
 

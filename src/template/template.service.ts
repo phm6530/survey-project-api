@@ -76,6 +76,7 @@ export class TemplateService {
       .createQueryBuilder('template')
       .leftJoin('template.respondents', 'respondents')
       .addSelect(['respondents.id', 'respondents.gender', 'respondents.age'])
+      .orderBy('template.id', 'DESC')
       .getMany();
 
     const tester = (await data).map((templateInfo) => {
@@ -107,6 +108,7 @@ export class TemplateService {
         templateType: templetType,
       })
       .orderBy('questions', 'ASC')
+      .addOrderBy('options', 'ASC')
       .getOne();
 
     if (!isExistTemplate) {

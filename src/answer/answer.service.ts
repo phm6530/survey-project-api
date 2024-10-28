@@ -96,6 +96,7 @@ export class AnswerService {
           question: { id: existQuestion.id },
           respondent: { id: insertResult.id },
         });
+
         await responseTextRepository.save(entity);
       } else if (type === 'select') {
         //객관식반영
@@ -110,7 +111,7 @@ export class AnswerService {
           repondent: insertResult,
         });
 
-        return await answerRepository.save(entity);
+        await answerRepository.save(entity);
       } else {
         throw new BadRequestException('없는 항목 잘못된 요청입니다.') as never;
       }
@@ -154,10 +155,12 @@ export class AnswerService {
 
     if (data && data.questions) {
       const questions = data.questions;
+
       for (const qs of questions) {
         if (qs.type === QuestionTypes.TEXT) {
-          const textAnswers = await this.getTextAnswer(qs.id);
-          qs.textAnswers = textAnswers;
+          const [textAnswers] = await this.getTextAnswer(qs.id);
+
+          qs.textAnswers = textAnswers as responseText[];
         }
       }
     }
@@ -219,19 +222,19 @@ export class AnswerService {
   async getTextAnswer(id: number, page: number = 1) {
     const limit = 10;
 
-    const result = await this.TextAnwersRepositorys.createQueryBuilder(
-      'textAnswers',
-    )
-      .leftJoinAndSelect('textAnswers.respondent', 'respondent')
-      .where('textAnswers.questionId = :questionId', {
-        questionId: id,
-      })
-      .orderBy('textAnswers.id', 'DESC')
-      .addOrderBy('respondent.id', 'DESC')
-      .skip((page - 1) * 10)
-      .take(limit)
-      .getMany();
-
-    return result;
+    const [Answers, totalCnt] =
+      await this.TextAnwersRepositorys.createQueryBuilder('textAnswers')
+        .leftJoinAndSelect('textAnswers.respondent', 'respondent')
+        .where('textAnswers.questionId = :questionId', {
+          questionId: id,
+        })
+        .orderBy('textAnswers.id', 'DESC')
+        .addOrderBy('respondent.id', 'DESC')
+        .skip((page - 1) * limit)
+        .take(limit)
+        .getManyAndCount();
+    const nextPage =
+      totalCnt > Answers.length + (page - 1) * limit ? page + 1 : null;
+    return [Answers, nextPage];
   }
 }
