@@ -17,8 +17,8 @@ export class QustionOption {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  label: string;
+  // @Column()
+  // label: string;
 
   @Column()
   value: string;

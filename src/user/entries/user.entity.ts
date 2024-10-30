@@ -14,7 +14,7 @@ export class UserModel extends BaseModel {
 
   @Column({ unique: true, length: 20 })
   @IsString()
-  @Length(1, 20, { message: '닉네임은 1자에서 20자 사이여야 합니다.' })
+  @Length(2, 20, { message: '닉네임은 2자에서 20자 사이여야 합니다.' })
   nickname: string;
 
   @Column({ unique: true })

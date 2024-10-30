@@ -1,11 +1,9 @@
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { QuestionTypes } from 'src/template/entries/survey/survey-questions.entity';
 
 export class QuestionOptionsDto {
   @IsString()
-  label: string;
-
-  @IsString()
+  @IsNotEmpty()
   value: string;
 
   @IsEnum(QuestionTypes)

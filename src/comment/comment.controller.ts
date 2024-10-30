@@ -31,10 +31,14 @@ export class CommentController {
     @parseIntParam('id') id: number,
   ) {
     console.count('댓글 가져오기');
-    return this.commentService.getcommentList({
+    // console.log(templateType, id);
+
+    const data = await this.commentService.getcommentList({
       id,
       template: templateType,
     });
+
+    return data;
   }
 
   @Delete('/:commentId')

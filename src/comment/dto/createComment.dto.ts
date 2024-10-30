@@ -5,4 +5,5 @@ export class CreateCommentDto extends PickType(CommentModel, [
   'comment',
   'password',
   'user',
+  'anonymous',
 ]) {}

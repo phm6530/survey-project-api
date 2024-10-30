@@ -26,7 +26,7 @@ export class ReplyService {
     body: CreateReplyDto,
     user?: { id: number },
   ) {
-    const { reply, password } = body;
+    const { reply, password, anonymous } = body;
 
     const isExistComment = await this.commentRepository.findOne({
       where: { id: commentId },
@@ -42,6 +42,7 @@ export class ReplyService {
         ? await this.authService.hashTransformPassword(password)
         : null,
       user: user ? { id: user.id } : null,
+      anonymous: anonymous ? anonymous : null,
       comment: { id: commentId },
     });
     return instanceToPlain(await this.replyRepository.save(entity));

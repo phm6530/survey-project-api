@@ -72,14 +72,16 @@ export class TemplateService {
   // get List
   async getlist() {
     //get List..
-    const data = this.templateRepository
+    const data = await this.templateRepository
       .createQueryBuilder('template')
       .leftJoin('template.respondents', 'respondents')
       .addSelect(['respondents.id', 'respondents.gender', 'respondents.age'])
       .orderBy('template.id', 'DESC')
       .getMany();
 
-    const tester = (await data).map((templateInfo) => {
+    // console.log(data);
+
+    const tester = data.map((templateInfo) => {
       const { respondents, ...rest } = templateInfo;
 
       const respondentsGroupData = respondentsGroup(respondents);

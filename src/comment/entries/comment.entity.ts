@@ -20,6 +20,11 @@ export class CommentModel extends BaseModel {
   })
   user?: UserModel;
 
+  @ValidateIf((o) => !o.user)
+  @Column({ nullable: true })
+  @IsString()
+  anonymous?: string;
+
   // Comment
   @IsNotEmpty({ message: '댓글은 비워둘 수 없습니다.' })
   @Column({ length: 1000 })

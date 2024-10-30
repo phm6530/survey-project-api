@@ -25,6 +25,11 @@ export class ReplyModel extends BaseModel {
   })
   user?: UserModel;
 
+  @ValidateIf((o) => !o.user)
+  @Column({ nullable: true })
+  @IsString()
+  anonymous?: string;
+
   @ManyToOne(() => CommentModel, (comment) => comment.replies, {
     onDelete: 'CASCADE',
   })

@@ -37,8 +37,8 @@ export class CommentService {
       .addSelect('wirteUser.id') // comment 유저
       .addSelect('replywirteUser.id')
 
-      .orderBy('comment.id', 'DESC')
-      .addOrderBy('replies.id', 'DESC') //  reply 유저
+      .orderBy('comment.id', 'ASC')
+      .addOrderBy('replies.id', 'ASC') //  reply 유저
 
       .getMany();
 
@@ -52,7 +52,8 @@ export class CommentService {
     qr: QueryRunner,
     user?: { id: string },
   ) {
-    const { comment, password } = body;
+    //익명으로 댓글을 남길때는 꼭 anonymous 체크하기
+    const { comment, password, anonymous } = body;
     const template = await this.commonService.isExistTemplate(
       { id: params.id, templateType: params.template },
       qr,
@@ -63,6 +64,7 @@ export class CommentService {
       template: { id: template.id },
       comment,
       user: user ? { id: +user.id } : null,
+      anonymous: !user ? anonymous : null,
       password: !user
         ? await this.authService.hashTransformPassword(password)
         : null,
