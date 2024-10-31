@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer';
 import {
   CreateDateColumn,
   PrimaryGeneratedColumn,
@@ -11,6 +12,7 @@ export abstract class BaseModel {
   id: number;
 
   @UpdateDateColumn()
+  @Exclude({ toPlainOnly: true })
   updateAt: Date;
 
   @CreateDateColumn()

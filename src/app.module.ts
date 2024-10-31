@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { ClassSerializerInterceptor, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ContactModule } from './contact/contact.module';
@@ -23,6 +23,7 @@ import { CommentModel } from 'src/comment/entries/comment.entity';
 import { ReplyModel } from 'src/reply/entries/reply.entity';
 import { AdminModel } from 'src/user/entries/admin.entity';
 import { ReplyModule } from './reply/reply.module';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -66,6 +67,9 @@ import { ReplyModule } from './reply/reply.module';
     ReplyModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    { provide: APP_INTERCEPTOR, useClass: ClassSerializerInterceptor },
+  ],
 })
 export class AppModule {}

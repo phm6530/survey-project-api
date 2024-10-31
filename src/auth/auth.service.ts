@@ -1,16 +1,17 @@
-import { ConfigService } from '@nestjs/config';
 import {
   BadRequestException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import { ConfigService } from '@nestjs/config';
 import { UserModel } from 'src/user/entries/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { QueryRunner, Repository } from 'typeorm';
 import { RegisterUserDto } from 'src/auth/dto/user-register.dto';
 import { instanceToPlain } from 'class-transformer';
 import { SignInDto } from 'src/auth/dto/user-signIn.dto';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
@@ -18,8 +19,10 @@ export class AuthService {
     private readonly ConfigService: ConfigService,
     @InjectRepository(UserModel)
     private readonly userModelRepository: Repository<UserModel>,
+    private readonly jwtService: JwtService,
   ) {}
 
+  //password Hash
   async hashTransformPassword(password: string) {
     //salt
     return await bcrypt.hash(
@@ -28,6 +31,7 @@ export class AuthService {
     );
   }
 
+  //password 검증
   async verifyPassword(inputPassword: string, storedHashedPassword: string) {
     const isVerify = await bcrypt.compare(inputPassword, storedHashedPassword);
     if (!isVerify) {
@@ -36,7 +40,7 @@ export class AuthService {
     return isVerify;
   }
 
-  //crateUser...
+  //회원가입
   async createUser(
     { nickname, password, email }: RegisterUserDto,
     qr: QueryRunner,
@@ -48,8 +52,6 @@ export class AuthService {
       .where('user.email = :email', { email })
       .orWhere('user.nickname = :nickname', { nickname })
       .getOne();
-
-    console.log('isExsitEmailorNickname:::', isExsitEmailorNickname);
 
     if (!!isExsitEmailorNickname)
       throw new BadRequestException('이미 존재하는 닉네임이거나 email 입니다.');
@@ -84,7 +86,29 @@ export class AuthService {
     if (!verfiy) {
       throw new BadRequestException('비밀번호가 일치하지 않습니다');
     } else {
-      return { message: '비밀번호가 일치합니다' };
+      const { role, email, nickname } = isExistUser;
+
+      const accessToken = await this.addToken({ role, email, nickname }, 300);
+      const refreshToken = await this.addToken({ role, email, nickname }, 3600);
+
+      return { accessToken, refreshToken, user: instanceToPlain(isExistUser) };
     }
+  }
+
+  // JWT 생성
+  async addToken(
+    user: Pick<UserModel, 'role' | 'email' | 'nickname'>,
+    expiresIn: number = 300,
+  ) {
+    //ScrectKey Get
+    const secrectKey = this.ConfigService.get<string>('SECRET_KEY');
+    const payload = { ...user };
+
+    console.log('user: ', { ...user });
+
+    return this.jwtService.sign(payload, {
+      secret: secrectKey,
+      expiresIn,
+    });
   }
 }

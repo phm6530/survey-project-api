@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -26,7 +27,12 @@ async function bootstrap() {
       // DTO에 정의되지 않은 속성이 있을 경우, 요청을 거부하고 에러 발생
     }),
   );
-
+  app.use(cookieParser());
+  //Cookie
+  app.enableCors({
+    origin: 'http://localhost:3000', // 클라이언트 URL
+    credentials: true, // 쿠키 전송 허용
+  });
   // Port
   await app.listen(5000);
 }
