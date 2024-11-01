@@ -10,7 +10,7 @@ async function bootstrap() {
   app.enableCors({
     origin: process.env.CORS_ALLOWED_ORIGINS,
     credentials: true, // 쿠키 허용 여부 (선택)
-    methods: 'GET,POST,PUT,DELETE', // 허용할 메서드 지정
+    methods: 'GET,POST,PUT,DELETE,PATCH', // 허용할 메서드 지정
     allowedHeaders: 'Content-Type, Authorization',
   });
 

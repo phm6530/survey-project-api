@@ -18,11 +18,15 @@ export class TokenGuard implements CanActivate {
   async canActivate(context: ExecutionContext) {
     const req = context.switchToHttp().getRequest();
     try {
-      const token = req.cookies['accessToken'];
+      // const token = req.cookies['accessToken'];
+      const rawToken = req.headers['authorization'];
 
-      console.log(token);
+      const token = rawToken.split(' ')[1];
+      // console.log(tokens);
 
-      if (!token) {
+      // console.log(token);
+      //
+      if (!rawToken) {
         throw new BadRequestException('잘못된 요청입니다.');
       }
 

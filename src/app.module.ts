@@ -24,6 +24,9 @@ import { ReplyModel } from 'src/reply/entries/reply.entity';
 import { AdminModel } from 'src/user/entries/admin.entity';
 import { ReplyModule } from './reply/reply.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { RefreshTokenModel } from 'src/auth/entries/refreshToken.entity';
+
+const auth = [RefreshTokenModel];
 
 @Module({
   imports: [
@@ -55,6 +58,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
         CommentModel,
         ReplyModel,
         AdminModel,
+        ...auth,
       ],
       synchronize: true,
     }),

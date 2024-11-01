@@ -1,7 +1,9 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
@@ -12,6 +14,7 @@ import { RegisterUserDto } from 'src/auth/dto/user-register.dto';
 import { instanceToPlain } from 'class-transformer';
 import { SignInDto } from 'src/auth/dto/user-signIn.dto';
 import { JwtService } from '@nestjs/jwt';
+import { RefreshTokenModel } from 'src/auth/entries/refreshToken.entity';
 
 @Injectable()
 export class AuthService {
@@ -20,6 +23,8 @@ export class AuthService {
     @InjectRepository(UserModel)
     private readonly userModelRepository: Repository<UserModel>,
     private readonly jwtService: JwtService,
+    @InjectRepository(RefreshTokenModel)
+    private readonly refreshTokenRepository: Repository<RefreshTokenModel>,
   ) {}
 
   //password Hash
@@ -38,6 +43,13 @@ export class AuthService {
       throw new BadRequestException('비밀번호가 일치하지 않습니다.');
     }
     return isVerify;
+  }
+
+  // 토큰검증
+  async verflyToken(token: string) {
+    return this.jwtService.verify(token, {
+      secret: this.ConfigService.get<string>('SECRECT_KEY'),
+    });
   }
 
   //회원가입
@@ -86,29 +98,93 @@ export class AuthService {
     if (!verfiy) {
       throw new BadRequestException('비밀번호가 일치하지 않습니다');
     } else {
-      const { role, email, nickname } = isExistUser;
+      const { role, email, nickname, id } = isExistUser;
+      //엑세스 10분
+      const accessToken = await this.addToken(
+        { id, role, email, nickname },
+        600,
+      );
 
-      const accessToken = await this.addToken({ role, email, nickname }, 300);
-      const refreshToken = await this.addToken({ role, email, nickname }, 3600);
+      console.log('isExistUser::', isExistUser);
 
-      return { accessToken, refreshToken, user: instanceToPlain(isExistUser) };
+      //리프래시 토큰 1시간
+      const refreshToken = await this.addToken(
+        { id, role, email, nickname },
+        3600,
+      );
+      return { accessToken, refreshToken, user: isExistUser };
     }
   }
 
   // JWT 생성
   async addToken(
-    user: Pick<UserModel, 'role' | 'email' | 'nickname'>,
+    user: Pick<UserModel, 'role' | 'email' | 'nickname' | 'id'>,
     expiresIn: number = 300,
   ) {
     //ScrectKey Get
     const secrectKey = this.ConfigService.get<string>('SECRET_KEY');
     const payload = { ...user };
 
-    console.log('user: ', { ...user });
-
     return this.jwtService.sign(payload, {
       secret: secrectKey,
       expiresIn,
     });
+  }
+
+  async createAccessToken(id: number) {
+    const getRefreshToken = await this.refreshTokenRepository.findOne({
+      where: [
+        {
+          isVaild: true,
+        },
+        {
+          user: { id },
+        },
+      ],
+      relations: ['user'],
+    });
+
+    if (!getRefreshToken) {
+      throw new BadRequestException('일치하는 토큰이 없습니다.');
+    }
+
+    const isExipreToken = this.verflyToken(getRefreshToken.token);
+    if (!isExipreToken) {
+      throw new UnauthorizedException('유효하지 않은 리프레시 토큰입니다.');
+    }
+
+    //엑세스 10분
+    // const accessToken = await this.addToken({ role, email, nickname }, 600);
+  }
+
+  async saveRefreshToken(user: UserModel, token: string) {
+    try {
+      const entity = this.refreshTokenRepository.create({
+        token,
+        user: { id: user.id },
+      });
+      await this.refreshTokenRepository.save(entity);
+    } catch (error) {
+      console.log(error);
+      throw new InternalServerErrorException('서버오류');
+    }
+  }
+
+  async invalidateRefreshToken(id: number) {
+    console.log(id);
+
+    // const find = await this.userModelRepository.findOne({
+    //   where: {
+    //     id,
+    //   },
+    // });
+
+    // console.log(find);
+
+    //업데이트
+    await this.refreshTokenRepository.update(
+      { user: { id } },
+      { isVaild: false },
+    );
   }
 }
