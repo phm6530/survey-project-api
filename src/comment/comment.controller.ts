@@ -1,4 +1,12 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from 'src/comment/dto/createComment.dto';
 import { paramsTemplateAndId, TemplateType } from 'type/template';
@@ -6,6 +14,8 @@ import { withTransactions } from 'lib/withTransaction.lib';
 import { DataSource, QueryRunner } from 'typeorm';
 import { parseIntParam } from 'src/common/decorator/parseIntParam.decorator';
 import { DeleteCommentDto } from 'src/comment/dto/deleteComment.dto';
+// import { UserIdToUserInterceptor } from 'src/comment/interceptor/UserIdtoUser.interceptor';
+import { TokenGuard } from 'src/auth/guard/token.guard';
 
 @Controller('comment')
 export class CommentController {
@@ -15,10 +25,13 @@ export class CommentController {
   ) {}
 
   @Post('/:template/:id')
+  @UseGuards(TokenGuard)
   postComment(
     @Param() params: paramsTemplateAndId,
     @Body() body: CreateCommentDto,
   ) {
+    console.log(body);
+
     const transaction = new withTransactions(this.dataSource);
     return transaction.execute(async (qr: QueryRunner) => {
       return await this.commentService.createComment(params, body, qr);

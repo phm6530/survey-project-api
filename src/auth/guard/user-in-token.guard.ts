@@ -14,12 +14,12 @@ export class UserInTokenGuard implements CanActivate {
     const req = context.switchToHttp().getRequest();
 
     try {
-      const BearerToken = req.headers['authorization'];
-      const token = BearerToken.split(' ')[1];
-      if (!token) {
+      const refreshToken = req.cookies['refreshToken'];
+
+      if (!refreshToken) {
         throw new BadRequestException('잘못된 요청입니다.');
       }
-      const getUser = this.JwtService.decode(token);
+      const getUser = this.JwtService.decode(refreshToken);
       req.user = getUser;
       return true;
     } catch (error) {

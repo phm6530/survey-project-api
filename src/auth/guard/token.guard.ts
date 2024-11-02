@@ -17,17 +17,23 @@ export class TokenGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext) {
     const req = context.switchToHttp().getRequest();
+    const body = req.body;
+
+    //anonmous있고 userId없으면 익명처리하기
+    if (
+      'anonymous' in body &&
+      'password' in body &&
+      !body.hasOwnProperty('userId')
+    ) {
+      return true; // 익명은 그냥 통과시킴
+    }
+
     try {
-      // const token = req.cookies['accessToken'];
       const rawToken = req.headers['authorization'];
-
       const token = rawToken.split(' ')[1];
-      // console.log(tokens);
 
-      // console.log(token);
-      //
-      if (!rawToken) {
-        throw new BadRequestException('잘못된 요청입니다.');
+      if (!token) {
+        throw new BadRequestException('정상적인 요청이 아닙니다.');
       }
 
       // 토큰 유효성 및 만료 여부 검증

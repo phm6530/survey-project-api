@@ -46,10 +46,17 @@ export class AuthService {
   }
 
   // 토큰검증
-  async verflyToken(token: string) {
-    return this.jwtService.verify(token, {
-      secret: this.ConfigService.get<string>('SECRECT_KEY'),
-    });
+  async verflyToken(token: string): Promise<UserModel> {
+    try {
+      const payload = await this.jwtService.verify(token, {
+        secret: this.ConfigService.get<string>('SECRET_KEY'),
+      });
+
+      return payload as UserModel;
+    } catch (error) {
+      console.log(error);
+      throw new UnauthorizedException('유효한 토큰이 아닙니다.');
+    }
   }
 
   //회원가입
@@ -102,10 +109,8 @@ export class AuthService {
       //엑세스 10분
       const accessToken = await this.addToken(
         { id, role, email, nickname },
-        600,
+        30,
       );
-
-      console.log('isExistUser::', isExistUser);
 
       //리프래시 토큰 1시간
       const refreshToken = await this.addToken(
@@ -117,7 +122,7 @@ export class AuthService {
   }
 
   // JWT 생성
-  async addToken(
+  addToken(
     user: Pick<UserModel, 'role' | 'email' | 'nickname' | 'id'>,
     expiresIn: number = 300,
   ) {
@@ -132,29 +137,20 @@ export class AuthService {
   }
 
   async createAccessToken(id: number) {
-    const getRefreshToken = await this.refreshTokenRepository.findOne({
-      where: [
-        {
-          isVaild: true,
-        },
-        {
-          user: { id },
-        },
-      ],
-      relations: ['user'],
+    const user = await this.userModelRepository.findOne({
+      where: {
+        id,
+      },
     });
-
-    if (!getRefreshToken) {
-      throw new BadRequestException('일치하는 토큰이 없습니다.');
-    }
-
-    const isExipreToken = this.verflyToken(getRefreshToken.token);
-    if (!isExipreToken) {
-      throw new UnauthorizedException('유효하지 않은 리프레시 토큰입니다.');
-    }
-
-    //엑세스 10분
-    // const accessToken = await this.addToken({ role, email, nickname }, 600);
+    return this.addToken(
+      {
+        role: user.role,
+        email: user.email,
+        nickname: user.nickname,
+        id: user.id,
+      },
+      30,
+    );
   }
 
   async saveRefreshToken(user: UserModel, token: string) {
@@ -182,9 +178,10 @@ export class AuthService {
     // console.log(find);
 
     //업데이트
-    await this.refreshTokenRepository.update(
+    const test = await this.refreshTokenRepository.update(
       { user: { id } },
       { isVaild: false },
     );
+    // console.log('test:', test);
   }
 }

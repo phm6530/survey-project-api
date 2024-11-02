@@ -1,10 +1,11 @@
 import { instanceToPlain } from 'class-transformer';
 import {
-  BadRequestException,
   Body,
   Controller,
+  Get,
   Patch,
   Post,
+  Request,
   Res,
   UseGuards,
 } from '@nestjs/common';
@@ -37,33 +38,25 @@ export class AuthController {
     const { accessToken, user, refreshToken } =
       await this.authService.loginUser(body);
 
-    await this.authService.saveRefreshToken(user, refreshToken);
+    // await this.authService.saveRefreshToken(user, refreshToken);
 
-    //엑세스 10분
-    res.cookie('accessToken', accessToken, {
-      httpOnly: false,
+    // refresh Token 일단 60분
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
       secure: false, //https 여부
       maxAge: 60 * 60 * 1000, // 60분 테스트
       path: '/',
     });
 
-    return { user: instanceToPlain(user) };
+    return { user: instanceToPlain(user), accessToken };
   }
 
   @Patch('/logout')
-  async logout(
-    @Body() body: { id: string },
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    if (body.id) {
-      throw new BadRequestException('잘못된 요청입니다');
-    }
+  // @UseGuards(UserInTokenGuard)
+  async logout(@Res({ passthrough: true }) res: Response) {
+    console.log('요청?');
 
-    // Refresh도 Flase처리
-    await this.authService.invalidateRefreshToken(+body.id);
-
-    // AccessToken은 Client에서 만료처리
-    res.cookie('accessToken', '', {
+    res.cookie('refreshToken', '', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       maxAge: 0, // 쿠키 만료
@@ -84,9 +77,21 @@ export class AuthController {
     });
   }
 
-  @Post('/refresh')
+  @Get('/accesstoken')
   @UseGuards(UserInTokenGuard)
-  refreshAccessToken(@Res() res: Pick<UserModel, 'id' | 'email'>) {
-    return this.authService.createAccessToken(+res.id);
+  async refreshAccessToken(@Request() req: any) {
+    console.log('나실행함????ㄴ');
+
+    const { id } = req.user as UserModel;
+    const refreshAccessToken = await this.authService.createAccessToken(id);
+    // //엑세스 10분
+    // res.cookie('accessToken', refreshAccessToken, {
+    //   httpOnly: false,
+    //   secure: false, //https 여부
+    //   maxAge: 60 * 60 * 1000, // 60분 테스트
+    //   path: '/',
+    // });
+
+    return { message: 'accessToken Refresh', refreshAccessToken };
   }
 }
