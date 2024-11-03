@@ -7,6 +7,7 @@ import { CommentModel } from 'src/comment/entries/comment.entity';
 import { AuthModule } from 'src/auth/auth.module';
 import { UserModel } from 'src/user/entries/user.entity';
 import { JwtModule } from '@nestjs/jwt';
+import { UserModule } from 'src/user/user.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { JwtModule } from '@nestjs/jwt';
     CommonModule,
     TypeOrmModule.forFeature([CommentModel, UserModel]),
     AuthModule,
+    UserModule,
   ],
   controllers: [CommentController],
   providers: [CommentService],

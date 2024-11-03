@@ -6,6 +6,8 @@ import { CreateCommentDto } from 'src/comment/dto/createComment.dto';
 import { DeleteCommentDto } from 'src/comment/dto/deleteComment.dto';
 import { CommentModel } from 'src/comment/entries/comment.entity';
 import { CommonService } from 'src/common/common.service';
+
+import { UserService } from 'src/user/user.service';
 import { paramsTemplateAndId } from 'type/template';
 import { QueryRunner, Repository } from 'typeorm';
 
@@ -16,6 +18,7 @@ export class CommentService {
     @InjectRepository(CommentModel)
     private readonly commentRepository: Repository<CommentModel>,
     private readonly authService: AuthService,
+    private readonly UserService: UserService,
   ) {}
 
   //댓글 리스트 가져오기
@@ -29,7 +32,7 @@ export class CommentService {
       .createQueryBuilder('comment')
       .leftJoinAndSelect('comment.replies', 'replies')
       .leftJoinAndSelect('comment.user', 'wirteUser')
-      .leftJoin('replies.user', 'replywirteUser')
+      .leftJoinAndSelect('replies.user', 'replywirteUser')
 
       .where('comment.templateId = :templateId', {
         templateId: isExistTemplate.id,
@@ -50,20 +53,26 @@ export class CommentService {
     params: paramsTemplateAndId,
     body: CreateCommentDto,
     qr: QueryRunner,
-    user?: { id: string },
   ) {
     //익명으로 댓글을 남길때는 꼭 anonymous 체크하기
-    const { comment, password, anonymous } = body;
+    const { userId, content, password, anonymous } = body;
     const template = await this.commonService.isExistTemplate(
       { id: params.id, templateType: params.template },
       qr,
     );
 
+    //유저면 user Entity 없으면 Null
+    const user = userId
+      ? await this.UserService.getUser({ id: +userId })
+      : null;
+
+    // const { userId: id, comment } = body;
+
     const repository = qr.manager.getRepository<CommentModel>(CommentModel);
     const entity = repository.create({
       template: { id: template.id },
-      comment,
-      user: user ? { id: +user.id } : null,
+      content,
+      user,
       anonymous: !user ? anonymous : null,
       password: !user
         ? await this.authService.hashTransformPassword(password)

@@ -11,6 +11,7 @@ import { UserModel } from 'src/user/entries/user.entity';
     JwtModule.register({}),
     TypeOrmModule.forFeature([UserModel, RefreshTokenModel]),
   ],
+  exports: [UserService],
   controllers: [UserController],
   providers: [UserService],
 })

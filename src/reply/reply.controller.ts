@@ -1,14 +1,16 @@
-import { Body, Controller, Delete, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Post, UseGuards } from '@nestjs/common';
 import { ReplyService } from './reply.service';
 import { parseIntParam } from 'src/common/decorator/parseIntParam.decorator';
 import { CreateReplyDto } from 'src/reply/dto/createReply.dto';
 import { DeleteReplyDto } from 'src/reply/dto/deleteReply.dto';
+import { TokenGuard } from 'src/auth/guard/token.guard';
 
 @Controller('reply')
 export class ReplyController {
   constructor(private readonly replyService: ReplyService) {}
 
   @Post('/:commentId')
+  @UseGuards(TokenGuard)
   postReply(
     @parseIntParam('commentId') commentId: number,
     @Body() body: CreateReplyDto,

@@ -16,7 +16,6 @@ export class UserController {
       id: user.id,
       email: user.email,
     });
-
     return instanceToPlain(userData);
   }
 }

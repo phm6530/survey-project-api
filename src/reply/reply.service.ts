@@ -1,3 +1,4 @@
+import { UserService } from 'src/user/user.service';
 import {
   BadRequestException,
   Injectable,
@@ -19,14 +20,11 @@ export class ReplyService {
     @InjectRepository(CommentModel)
     private readonly commentRepository: Repository<CommentModel>,
     private readonly authService: AuthService,
+    private readonly UserService: UserService,
   ) {}
 
-  async createReply(
-    commentId: number,
-    body: CreateReplyDto,
-    user?: { id: number },
-  ) {
-    const { reply, password, anonymous } = body;
+  async createReply(commentId: number, body: CreateReplyDto) {
+    const { content, password, anonymous, userId } = body;
 
     const isExistComment = await this.commentRepository.findOne({
       where: { id: commentId },
@@ -35,9 +33,12 @@ export class ReplyService {
     if (!isExistComment) {
       throw new BadRequestException('error..');
     }
+    const user = userId
+      ? await this.UserService.getUser({ id: +userId })
+      : null;
 
     const entity = this.replyRepository.create({
-      reply,
+      content,
       password: !user
         ? await this.authService.hashTransformPassword(password)
         : null,
@@ -45,6 +46,7 @@ export class ReplyService {
       anonymous: anonymous ? anonymous : null,
       comment: { id: commentId },
     });
+
     return instanceToPlain(await this.replyRepository.save(entity));
   }
 

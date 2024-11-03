@@ -80,7 +80,7 @@ export class AuthController {
   @Get('/accesstoken')
   @UseGuards(UserInTokenGuard)
   async refreshAccessToken(@Request() req: any) {
-    console.log('나실행함????ㄴ');
+    console.log('토큰 재발급 ');
 
     const { id } = req.user as UserModel;
     const refreshAccessToken = await this.authService.createAccessToken(id);

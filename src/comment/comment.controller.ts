@@ -17,6 +17,8 @@ import { DeleteCommentDto } from 'src/comment/dto/deleteComment.dto';
 // import { UserIdToUserInterceptor } from 'src/comment/interceptor/UserIdtoUser.interceptor';
 import { TokenGuard } from 'src/auth/guard/token.guard';
 
+// import { UserIdToUserInterceptor } from 'src/comment/interceptor/UserIdtoUser.interceptor';
+
 @Controller('comment')
 export class CommentController {
   constructor(
@@ -26,12 +28,11 @@ export class CommentController {
 
   @Post('/:template/:id')
   @UseGuards(TokenGuard)
-  postComment(
+  // @UseInterceptors(UserIdToUserInterceptor)
+  async postComment(
     @Param() params: paramsTemplateAndId,
     @Body() body: CreateCommentDto,
   ) {
-    console.log(body);
-
     const transaction = new withTransactions(this.dataSource);
     return transaction.execute(async (qr: QueryRunner) => {
       return await this.commentService.createComment(params, body, qr);
@@ -47,6 +48,8 @@ export class CommentController {
       id,
       template: templateType,
     });
+
+    console.log(data[0].replies);
 
     return data;
   }

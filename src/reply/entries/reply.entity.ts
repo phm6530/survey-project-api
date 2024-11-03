@@ -1,5 +1,5 @@
 import { Exclude } from 'class-transformer';
-import { IsNotEmpty, IsString, ValidateIf } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, ValidateIf } from 'class-validator';
 import { CommentModel } from 'src/comment/entries/comment.entity';
 import { BaseModel } from 'src/common/entries/base.entity';
 import { UserModel } from 'src/user/entries/user.entity';
@@ -10,10 +10,10 @@ export class ReplyModel extends BaseModel {
   @Column({ length: 1000 }) //500자
   @IsString()
   @IsNotEmpty()
-  reply: string;
+  content: string;
 
   @Column({ nullable: true })
-  @ValidateIf((o) => !o.user)
+  @ValidateIf((o) => o.anonymous)
   @Exclude({ toPlainOnly: true })
   @IsNotEmpty({ message: '비 회원은 비밀번호를 입력해야 합니다.' })
   password?: string;
@@ -25,7 +25,7 @@ export class ReplyModel extends BaseModel {
   })
   user?: UserModel;
 
-  @ValidateIf((o) => !o.user)
+  @IsOptional()
   @Column({ nullable: true })
   @IsString()
   anonymous?: string;

@@ -161,14 +161,12 @@ export class AuthService {
       });
       await this.refreshTokenRepository.save(entity);
     } catch (error) {
-      console.log(error);
+      console.error(error);
       throw new InternalServerErrorException('서버오류');
     }
   }
 
   async invalidateRefreshToken(id: number) {
-    console.log(id);
-
     // const find = await this.userModelRepository.findOne({
     //   where: {
     //     id,

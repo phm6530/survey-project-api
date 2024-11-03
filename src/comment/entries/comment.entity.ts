@@ -1,5 +1,5 @@
 import { Exclude } from 'class-transformer';
-import { IsNotEmpty, IsString, ValidateIf } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, ValidateIf } from 'class-validator';
 import { ReplyModel } from 'src/reply/entries/reply.entity';
 import { BaseModel } from 'src/common/entries/base.entity';
 import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
@@ -20,7 +20,8 @@ export class CommentModel extends BaseModel {
   })
   user?: UserModel;
 
-  @ValidateIf((o) => !o.user)
+  // @ValidateIf((o) => !o.user)
+  @IsOptional()
   @Column({ nullable: true })
   @IsString()
   anonymous?: string;
@@ -29,11 +30,11 @@ export class CommentModel extends BaseModel {
   @IsNotEmpty({ message: '댓글은 비워둘 수 없습니다.' })
   @Column({ length: 1000 })
   @IsString()
-  comment: string;
+  content: string;
 
   // 익명일 시에는 password 받아야함
   @Column({ nullable: true })
-  @ValidateIf((o) => !o.user)
+  @ValidateIf((o) => o.anonymous)
   @Exclude({ toPlainOnly: true })
   @IsNotEmpty({ message: '비회원은 비밀번호를 입력해야 합니다.' })
   password: string;

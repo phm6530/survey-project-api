@@ -32,6 +32,8 @@ export class TokenGuard implements CanActivate {
       const rawToken = req.headers['authorization'];
       const token = rawToken.split(' ')[1];
 
+      console.log('요청토큰', token);
+
       if (!token) {
         throw new BadRequestException('정상적인 요청이 아닙니다.');
       }
@@ -40,11 +42,12 @@ export class TokenGuard implements CanActivate {
       const decodedUserData = this.JwtService.verify(token, {
         secret: this.configService.get<string>('SECRET_KEY'),
       });
+      console.log('유저데이터', decodedUserData);
 
       req.user = decodedUserData;
       return true;
     } catch (error) {
-      console.log(error.message);
+      console.error(error.message);
       throw new UnauthorizedException('토큰이 만료되었거나 유효하지 않습니다.');
     }
   }
