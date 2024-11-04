@@ -6,12 +6,14 @@ import {
   Param,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { TemplateService } from './template.service';
 import { CreateTemplateDto } from 'src/template/dto/create-template.dto';
 import { DataSource } from 'typeorm';
 import { withTransaction } from 'lib/withTransaction.lib';
 import { TemplateType } from 'type/template';
+import { TokenGuard } from 'src/auth/guard/token.guard';
 
 export type GetTemplateParams = {
   template: TemplateType;
@@ -40,12 +42,14 @@ export class TemplateController {
 
   // 설문조사 템플릿 생성
   @Post(':template')
+  @UseGuards(TokenGuard)
   async createTemplate(
     @Param('template') template: TemplateType,
     @Body() body: CreateTemplateDto,
   ) {
     const templateId = await withTransaction(this.dataSource, async (qr) => {
       const { questions, ...metadata } = body;
+
       //Meta
       const meta = await this.templateService.createTemplateMeta(
         { ...metadata },

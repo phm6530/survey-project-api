@@ -1,8 +1,11 @@
 import { TemplateType } from './../../type/template';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { createClient } from '@supabase/supabase-js';
+import { extname } from 'path';
 import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
 import { QueryRunner, Repository } from 'typeorm';
+import { v4 as uuid4 } from 'uuid';
 
 @Injectable()
 export class CommonService {
@@ -32,5 +35,33 @@ export class CommonService {
     }
 
     return template;
+  }
+
+  async uploadFileSupabase(file: Express.Multer.File): Promise<string | null> {
+    const supabase = createClient(
+      'https://hnfcmdvepwcpcxxwavim.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhuZmNtZHZlcHdjcGN4eHdhdmltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzA3Mjg5OTAsImV4cCI6MjA0NjMwNDk5MH0.VAOzu3K94jO9HLjQ5oekVmiQY-_QP8ZmiDsqxcMZGvM',
+    );
+
+    const uniqueFileName = `${uuid4()}${extname(file.originalname)}`;
+
+    //파일업로드
+    const { data, error } = await supabase.storage
+      .from('images')
+      .upload(`public/${uniqueFileName}`, file.buffer, {
+        contentType: file.mimetype,
+      });
+
+    if (error) {
+      console.log(error);
+      throw new Error('파일 업로드 실패');
+    }
+
+    // 공개 url 전달
+    const { data: publicData } = supabase.storage
+      .from('images')
+      .getPublicUrl(`public/${uniqueFileName}`);
+
+    return publicData.publicUrl || null;
   }
 }

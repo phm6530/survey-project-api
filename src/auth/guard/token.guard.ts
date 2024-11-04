@@ -1,6 +1,5 @@
 import { JwtService } from '@nestjs/jwt';
 import {
-  BadRequestException,
   CanActivate,
   ExecutionContext,
   Injectable,
@@ -18,31 +17,31 @@ export class TokenGuard implements CanActivate {
   async canActivate(context: ExecutionContext) {
     const req = context.switchToHttp().getRequest();
     const body = req.body;
+    const path = req.path;
 
-    //anonmous있고 userId없으면 익명처리하기
+    //anonmous있고 userId없으면 익명처리하기 Comment에서만 익명 통과
+    //
     if (
+      path.startsWith('/comment') &&
       'anonymous' in body &&
       'password' in body &&
       !body.hasOwnProperty('userId')
     ) {
-      return true; // 익명은 그냥 통과시킴
+      return true; // 익명은 통과시킴
     }
 
     try {
       const rawToken = req.headers['authorization'];
       const token = rawToken.split(' ')[1];
 
-      console.log('요청토큰', token);
-
       if (!token) {
-        throw new BadRequestException('정상적인 요청이 아닙니다.');
+        throw new UnauthorizedException('정상적인 요청이 아닙니다.');
       }
 
       // 토큰 유효성 및 만료 여부 검증
       const decodedUserData = this.JwtService.verify(token, {
         secret: this.configService.get<string>('SECRET_KEY'),
       });
-      console.log('유저데이터', decodedUserData);
 
       req.user = decodedUserData;
       return true;

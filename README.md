@@ -93,4 +93,5 @@ npm install class-validator class-transformer
 npm install @nestjs/config
 npm i multer @types/multer
 npm i @nestjs/jwt
+npm install @supabase/supabase-js
 ```

@@ -2,8 +2,9 @@ import { RespondentModel } from 'src/answer/entries/respondent.entity';
 import { CommentModel } from 'src/comment/entries/comment.entity';
 import { BaseModel } from 'src/common/entries/base.entity';
 import { SurveyQuestion } from 'src/template/entries/survey/survey-questions.entity';
+import { UserModel } from 'src/user/entries/user.entity';
 import { TemplateType } from 'type/template';
-import { Column, Entity, OneToMany } from 'typeorm';
+import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 
 @Entity('template_metadata')
 export class TemplateMetaModel extends BaseModel {
@@ -41,4 +42,8 @@ export class TemplateMetaModel extends BaseModel {
   //템플릿에 대한 댓글
   @OneToMany(() => CommentModel, (comment) => comment.template)
   comments: CommentModel[];
+
+  //생성한유저
+  @ManyToOne(() => UserModel, (user) => user.templates)
+  creator: UserModel;
 }

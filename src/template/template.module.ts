@@ -3,9 +3,13 @@ import { TemplateService } from './template.service';
 import { TemplateController } from './template.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([TemplateMetaModel])],
+  imports: [
+    JwtModule.register({}),
+    TypeOrmModule.forFeature([TemplateMetaModel]),
+  ],
   controllers: [TemplateController],
   providers: [TemplateService],
 })

@@ -1,8 +1,24 @@
 import { PickType } from '@nestjs/mapped-types';
 import { Type } from 'class-transformer';
-import { IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsEmail,
+  IsEnum,
+  IsNumber,
+  IsObject,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
 import { TemplateType } from 'type/template';
+
+class CreatorDto {
+  @IsNumber()
+  id: number;
+
+  @IsEmail()
+  email: string;
+}
 
 //template 메타데이터
 export class CreateMetadataDto extends PickType(TemplateMetaModel, [
@@ -45,4 +61,7 @@ export class CreateMetadataDto extends PickType(TemplateMetaModel, [
   @IsOptional()
   //class trasform lib는 모두 옵셔널로처리함 떄문에 is Not Empty 처리하는것도 좋음ㅇㅇ
   endDate: Date;
+
+  @IsObject()
+  creator: CreatorDto;
 }

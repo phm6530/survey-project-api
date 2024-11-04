@@ -49,8 +49,6 @@ export class CommentController {
       template: templateType,
     });
 
-    console.log(data[0].replies);
-
     return data;
   }
 

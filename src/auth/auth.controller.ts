@@ -94,4 +94,7 @@ export class AuthController {
 
     return { message: 'accessToken Refresh', refreshAccessToken };
   }
+
+  @Get('check')
+  CheckAuth() {}
 }

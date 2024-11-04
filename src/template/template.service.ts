@@ -31,7 +31,11 @@ export class TemplateService {
     const repository =
       qr.manager.getRepository<TemplateMetaModel>(TemplateMetaModel);
 
-    const instance = repository.create(body);
+    const instance = repository.create({
+      ...body,
+      creator: { id: body.creator.id },
+    });
+
     return await repository.save(instance);
   }
 
@@ -105,6 +109,7 @@ export class TemplateService {
       .leftJoinAndSelect('template.questions', 'questions')
       .leftJoinAndSelect('questions.options', 'options') // questions와 options 간의 관계 추가
       .leftJoinAndSelect('template.respondents', 'respondents')
+      .leftJoinAndSelect('template.creator', 'user')
       .where('template.id = :id', { id })
       .andWhere('template.templateType = :templateType', {
         templateType: templetType,

@@ -4,6 +4,7 @@ import { RefreshTokenModel } from 'src/auth/entries/refreshToken.entity';
 import { CommentModel } from 'src/comment/entries/comment.entity';
 import { BaseModel } from 'src/common/entries/base.entity';
 import { ReplyModel } from 'src/reply/entries/reply.entity';
+import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
 import { RoleEnum } from 'type/auth';
 import { Column, Entity, OneToMany } from 'typeorm';
 
@@ -25,6 +26,10 @@ export class UserModel extends BaseModel {
   @Column()
   @Exclude({ toPlainOnly: true })
   password: string;
+
+  // 유저가 생성한 템플릿들
+  @OneToMany(() => TemplateMetaModel, (template) => template.creator)
+  templates: TemplateMetaModel[];
 
   /**관계설정 */
   @OneToMany(() => RefreshTokenModel, (token) => token.user, { nullable: true })
