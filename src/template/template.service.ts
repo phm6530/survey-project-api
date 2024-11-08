@@ -21,6 +21,90 @@ import {
 } from 'type/template';
 import { UserModel } from 'src/user/entries/user.entity';
 
+//참여자 + 참여자 그룹 별 명수
+export type DetailRespondents = {
+  tag: RESPONDENT_TAG.DETAIL;
+  allCnt: number;
+  detail: Record<GENDER_GROUP, { [key: string]: number }>;
+};
+
+// MaxGroup + 참여자
+export type RespondentsAndMaxGroup = {
+  tag: RESPONDENT_TAG.MAXGROUP;
+  allCnt: number;
+  maxGroup: {
+    maxCnt: number;
+    genderGroup?: GENDER_GROUP;
+    ageGroup?: number;
+  };
+};
+
+//응답자
+export interface Respondent {
+  id: number;
+  age: number;
+  gender: string;
+}
+export enum USER_ROLE {
+  ADMIN = 'admin',
+  user = 'user',
+}
+
+export type User = {
+  createAt: string;
+  id: number;
+  email: string;
+  nickname: string;
+  role: USER_ROLE;
+};
+
+//Template List Props ...
+export type TemplateItemMetadata<
+  T extends DetailRespondents | RespondentsAndMaxGroup,
+> = {
+  id: number;
+  // updatedAt: string;
+  createdAt: string;
+  title: string;
+  description: string;
+  templateType: TEMPLATE_TYPE;
+  isGenderCollected: boolean;
+  isAgeCollected: boolean;
+  startDate: string | null;
+  endDate: string | null;
+  thumbnail: string;
+  respondents: T;
+  creator: User;
+  templateKey: string;
+};
+
+interface TemplateResult {
+  id: number;
+  updateAt: Date;
+  createAt: Date;
+  title: string;
+  description: string;
+  templateType: string;
+  isGenderCollected: boolean;
+  isAgeCollected: boolean;
+  startDate?: Date | null;
+  endDate?: Date | null;
+  thumbnail?: string | null;
+  creatorId: number;
+  templateKey?: string | null;
+
+  // User 정보
+  nickname: string;
+  email: string;
+  role: string;
+
+  // 통계 정보
+  max_age_group: number;
+  max_gender_group: string;
+  max_group_count: string; // 응답자 수가 문자열로 반환됨
+  total: string;
+}
+
 @Injectable()
 export class TemplateService {
   constructor(
@@ -85,50 +169,106 @@ export class TemplateService {
     sort,
     id: userId,
   }: { sort?: TEMPLATERLIST_SORT } & Partial<Pick<UserModel, 'id'>>) {
-    const result = await this.templateRepository.query(`
-      WITH AgeGenderCounts AS (
+    let sql = `
+        WITH AgeGenderCounts AS (
+            SELECT 
+              rm."templateId",
+              rm.age,
+              rm.gender,
+              COUNT(*) AS count
+            FROM respondent_model AS rm
+            GROUP BY rm."templateId", rm.age, rm.gender
+          ),
+          MaxAgeGender AS (
+            SELECT DISTINCT ON ("templateId")
+              "templateId",
+              age,
+              gender,
+              count,
+              RANK() OVER (PARTITION BY "templateId" ORDER BY count DESC) AS rank
+            FROM AgeGenderCounts
+          ),
+          TemplateRespondentCounts AS (
+            SELECT 
+              rm."templateId",
+              COUNT(*) AS total_respondents
+            FROM respondent_model AS rm
+            GROUP BY rm."templateId"
+          )
           SELECT 
-            rm."templateId",
-            rm.age,
-            rm.gender,
-            COUNT(*) AS count
-          FROM respondent_model AS rm
-          GROUP BY rm."templateId", rm.age, rm.gender
-        ),
-        MaxAgeGender AS (
-          SELECT DISTINCT ON ("templateId")
-            "templateId",
-            age,
-            gender,
-            count,
-            RANK() OVER (PARTITION BY "templateId" ORDER BY count DESC) AS rank
-          FROM AgeGenderCounts
-        ),
-        TemplateRespondentCounts AS (
-          SELECT 
-            rm."templateId",
-            COUNT(*) AS total_respondents
-          FROM respondent_model AS rm
-          GROUP BY rm."templateId"
-        )
-        SELECT 
-          tm.*,
-          u.id as creatorId,
-          u.nickname as nickname,
-          u.email as email,
-          u.role as role,
-          mag.age AS max_age_group,
-          mag.gender AS max_gender_group,
-          mag.count AS max_group_count,
-          trc.total_respondents as total
-        FROM template_metadata AS tm
-        LEFT JOIN users AS u ON tm."creatorId" = u.id
-        LEFT JOIN MaxAgeGender AS mag ON tm.id = mag."templateId" AND mag.rank = 1
-        LEFT JOIN TemplateRespondentCounts AS trc ON tm.id = trc."templateId"
-        ORDER BY total DESC NULLS LAST
-        OFFSET 10 LIMIT 10;`);
+            tm.*,
+            u.nickname as nickname,
+            u.email as email,
+            u.role as role,
+            mag.age AS max_age_group,
+            mag.gender AS max_gender_group,
+            mag.count AS max_group_count,
+            trc.total_respondents as total
+          FROM template_metadata AS tm
+          LEFT JOIN users AS u ON tm."creatorId" = u.id
+          LEFT JOIN MaxAgeGender AS mag ON tm.id = mag."templateId" AND mag.rank = 1
+          LEFT JOIN TemplateRespondentCounts AS trc ON tm.id = trc."templateId"
+          `;
 
-    console.log(result);
+    if (sort) {
+      switch (sort) {
+        case TEMPLATERLIST_SORT.ALL:
+          sql += ` ORDER BY tm.id DESC`;
+          break;
+        case TEMPLATERLIST_SORT.FEMALE:
+          console.log('female');
+          break;
+        case TEMPLATERLIST_SORT.MALE:
+          console.log('male');
+          break;
+        case TEMPLATERLIST_SORT.RESPONDENTS:
+          sql += `ORDER BY total DESC NULLS LAST`;
+          break;
+        default:
+          // 정렬없으면 그냥 최신으로
+          sql += `ORDER BY tm.id DESC`;
+      }
+    }
+
+    // Paging 띄어쓰기 유의
+    sql += ` OFFSET 0 LIMIT 12;`;
+
+    const result: TemplateResult[] = await this.templateRepository.query(sql);
+    const resultArr = [] as TemplateItemMetadata<RespondentsAndMaxGroup>[];
+
+    result.forEach((row) => {
+      resultArr.push({
+        id: row.id,
+        createdAt: row.createAt.toLocaleString(),
+        title: row.title,
+        description: row.description,
+        isGenderCollected: row.isGenderCollected,
+        isAgeCollected: row.isAgeCollected,
+        startDate: row.startDate?.toLocaleDateString() || null,
+        endDate: row.endDate?.toLocaleDateString() || null,
+        thumbnail: row.thumbnail,
+        respondents: {
+          tag: RESPONDENT_TAG.MAXGROUP,
+          allCnt: parseInt(row.total, 10),
+          maxGroup: {
+            maxCnt: parseInt(row.max_group_count, 10),
+            genderGroup: (row.max_gender_group as GENDER_GROUP) || null,
+            ageGroup: row.max_age_group || null,
+          },
+        },
+        creator: {
+          id: row.creatorId,
+          createAt: row.createAt.toLocaleDateString(),
+          email: row.email,
+          nickname: row.nickname,
+          role: row.role as USER_ROLE,
+        },
+        templateKey: row.templateKey,
+        templateType: row.templateType as TEMPLATE_TYPE,
+      });
+    });
+
+    return resultArr;
 
     const query = this.templateRepository
       .createQueryBuilder('template')
@@ -191,16 +331,6 @@ export class TemplateService {
           }
         }
       }
-
-      // 프론트에게 enum으로 MAX표시하는 것임을 알림
-      return {
-        ...rest,
-        respondents: {
-          tag: RESPONDENT_TAG.MAXGROUP,
-          allCnt: respondents.length,
-          maxGroup,
-        },
-      };
     });
   }
 
