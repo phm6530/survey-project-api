@@ -9,15 +9,14 @@ import {
 } from '@nestjs/common';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from 'src/comment/dto/createComment.dto';
-import { paramsTemplateAndId, TemplateType } from 'type/template';
+import { paramsTemplateAndId, TEMPLATE_TYPE } from 'type/template';
 import { withTransactions } from 'lib/withTransaction.lib';
 import { DataSource, QueryRunner } from 'typeorm';
 import { parseIntParam } from 'src/common/decorator/parseIntParam.decorator';
 import { DeleteCommentDto } from 'src/comment/dto/deleteComment.dto';
-// import { UserIdToUserInterceptor } from 'src/comment/interceptor/UserIdtoUser.interceptor';
 import { TokenGuard } from 'src/auth/guard/token.guard';
-
-// import { UserIdToUserInterceptor } from 'src/comment/interceptor/UserIdtoUser.interceptor';
+import { User } from 'src/user/decorator/getUser.decorator';
+import { UserModel } from 'src/user/entries/user.entity';
 
 @Controller('comment')
 export class CommentController {
@@ -41,7 +40,7 @@ export class CommentController {
 
   @Get('/:template/:id')
   async getCommentList(
-    @Param('template') templateType: TemplateType,
+    @Param('template') templateType: TEMPLATE_TYPE,
     @parseIntParam('id') id: number,
   ) {
     const data = await this.commentService.getcommentList({
@@ -53,10 +52,12 @@ export class CommentController {
   }
 
   @Delete('/:commentId')
+  @UseGuards(TokenGuard)
   deleteComment(
     @parseIntParam('commentId') id: number,
     @Body() body: DeleteCommentDto,
+    @User() user?: UserModel,
   ) {
-    return this.commentService.deleteCommentTarget(id, body.password);
+    return this.commentService.deleteCommentTarget(id, user, body.password);
   }
 }

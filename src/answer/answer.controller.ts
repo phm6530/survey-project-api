@@ -1,19 +1,12 @@
-import {
-  BadRequestException,
-  Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { AnswerService } from './answer.service';
 import { withTransaction } from 'lib/withTransaction.lib';
 import { DataSource, QueryRunner } from 'typeorm';
 import { CreateAnswerDto } from 'src/answer/dto/CreateAnswer.dto';
-import { TemplateType } from 'type/template';
+import { TEMPLATE_TYPE } from 'type/template';
 
 export type AnswerPostParams = {
-  template: TemplateType;
+  template: TEMPLATE_TYPE;
   id: string;
 };
 

@@ -6,6 +6,7 @@ import { CreateCommentDto } from 'src/comment/dto/createComment.dto';
 import { DeleteCommentDto } from 'src/comment/dto/deleteComment.dto';
 import { CommentModel } from 'src/comment/entries/comment.entity';
 import { CommonService } from 'src/common/common.service';
+import { UserModel } from 'src/user/entries/user.entity';
 
 import { UserService } from 'src/user/user.service';
 import { paramsTemplateAndId } from 'type/template';
@@ -85,6 +86,7 @@ export class CommentService {
 
   async deleteCommentTarget(
     id: number,
+    user: UserModel | null,
     password: DeleteCommentDto['password'],
   ) {
     const isExistComment = await this.commentRepository.findOne({
@@ -95,8 +97,12 @@ export class CommentService {
       throw new NotFoundException('이미 삭제되었거나 잘못된 요청입니다');
     }
 
-    await this.authService.verifyPassword(password, isExistComment.password);
+    console.log(user, password);
 
+    if (!user && password) {
+      console.log('안들어오나??');
+      await this.authService.verifyPassword(password, isExistComment.password);
+    }
     return await this.commentRepository.delete({ id });
   }
 }

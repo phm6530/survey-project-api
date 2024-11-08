@@ -1,5 +1,6 @@
-import { TemplateType } from './../../type/template';
+import { TEMPLATE_TYPE } from './../../type/template';
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createClient } from '@supabase/supabase-js';
 import { extname } from 'path';
@@ -12,6 +13,7 @@ export class CommonService {
   constructor(
     @InjectRepository(TemplateMetaModel)
     private readonly templatemetaRepository: Repository<TemplateMetaModel>,
+    private readonly configService: ConfigService,
   ) {}
 
   getRepository(qr?: QueryRunner) {
@@ -22,7 +24,7 @@ export class CommonService {
 
   //template 존재여부
   async isExistTemplate(
-    { id, templateType }: { id: number; templateType: TemplateType },
+    { id, templateType }: { id: number; templateType: TEMPLATE_TYPE },
     qr?: QueryRunner,
   ) {
     const templateMeta = this.getRepository(qr);
@@ -37,18 +39,21 @@ export class CommonService {
     return template;
   }
 
-  async uploadFileSupabase(file: Express.Multer.File): Promise<string | null> {
-    const supabase = createClient(
-      'https://hnfcmdvepwcpcxxwavim.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhuZmNtZHZlcHdjcGN4eHdhdmltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzA3Mjg5OTAsImV4cCI6MjA0NjMwNDk5MH0.VAOzu3K94jO9HLjQ5oekVmiQY-_QP8ZmiDsqxcMZGvM',
-    );
+  async uploadFileSupabase(
+    file: Express.Multer.File,
+    key: string,
+  ): Promise<string | null> {
+    const supabaseKey = this.configService.get<string>('SUPABASE_KEY');
+    const supabaseUrl = this.configService.get<string>('SUPABASE_URL');
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
     const uniqueFileName = `${uuid4()}${extname(file.originalname)}`;
 
     //파일업로드
     const { data, error } = await supabase.storage
       .from('images')
-      .upload(`public/${uniqueFileName}`, file.buffer, {
+      .upload(`temp/${key}/${uniqueFileName}`, file.buffer, {
         contentType: file.mimetype,
       });
 
@@ -60,7 +65,7 @@ export class CommonService {
     // 공개 url 전달
     const { data: publicData } = supabase.storage
       .from('images')
-      .getPublicUrl(`public/${uniqueFileName}`);
+      .getPublicUrl(`temp/${key}/${uniqueFileName}`);
 
     return publicData.publicUrl || null;
   }

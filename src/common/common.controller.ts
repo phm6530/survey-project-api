@@ -12,17 +12,17 @@ import { FileInterceptor } from '@nestjs/platform-express';
 export class CommonController {
   constructor(private readonly commonService: CommonService) {}
 
-  @Post('image/:id')
+  @Post('image/:key')
   //file인지 files인지 확인...
   @UseInterceptors(FileInterceptor('image'))
   async UploadImage(
     @UploadedFile() file: Express.Multer.File,
-    @Param() id: string, //Template Id
+    @Param() params: { key: string }, //Template Id
   ) {
-    console.log('template id', +id);
-
-    const result = await this.commonService.uploadFileSupabase(file);
-    console.log(result);
+    const result = await this.commonService.uploadFileSupabase(
+      file,
+      params.key,
+    );
 
     return {
       supabase_storage_imgurl: result,

@@ -3,6 +3,7 @@ import {
   CanActivate,
   ExecutionContext,
   Injectable,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
@@ -17,7 +18,7 @@ export class UserInTokenGuard implements CanActivate {
       const refreshToken = req.cookies['refreshToken'];
 
       if (!refreshToken) {
-        throw new BadRequestException('잘못된 요청입니다.');
+        throw new UnauthorizedException('refreshToken이 없습니다.');
       }
       const getUser = this.JwtService.decode(refreshToken);
       req.user = getUser;

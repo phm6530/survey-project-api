@@ -3,7 +3,7 @@ import { CommentModel } from 'src/comment/entries/comment.entity';
 import { BaseModel } from 'src/common/entries/base.entity';
 import { SurveyQuestion } from 'src/template/entries/survey/survey-questions.entity';
 import { UserModel } from 'src/user/entries/user.entity';
-import { TemplateType } from 'type/template';
+import { TEMPLATE_TYPE } from 'type/template';
 import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 
 @Entity('template_metadata')
@@ -14,14 +14,17 @@ export class TemplateMetaModel extends BaseModel {
   @Column()
   description: string;
 
-  @Column({ enum: TemplateType })
-  templateType: TemplateType;
+  @Column({ enum: TEMPLATE_TYPE })
+  templateType: TEMPLATE_TYPE;
 
   @Column()
   isGenderCollected: boolean;
 
   @Column()
   isAgeCollected: boolean;
+
+  @Column({ nullable: true })
+  templateKey: string;
 
   @Column({ nullable: true })
   startDate: Date;

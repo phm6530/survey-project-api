@@ -44,7 +44,7 @@ export class SurveyQuestion {
   label: string;
 
   @Column({ nullable: true })
-  pictrue: string;
+  img: string;
 
   //객관식 일 때 Option 연결
   @OneToMany(() => QustionOption, (option) => option.question, {

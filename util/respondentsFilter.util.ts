@@ -11,12 +11,12 @@ export const respondentsGroup = (
 
   respondents.forEach((e) => {
     filterData.selectUserCnt++;
-
     if (!filterData[e.gender][e.age]) {
       filterData[e.gender][e.age] = 1;
       return;
     }
     filterData[e.gender][e.age]++;
   });
+
   return filterData;
 };

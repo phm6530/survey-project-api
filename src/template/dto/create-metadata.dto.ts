@@ -10,7 +10,7 @@ import {
   IsString,
 } from 'class-validator';
 import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
-import { TemplateType } from 'type/template';
+import { TEMPLATE_TYPE } from 'type/template';
 
 class CreatorDto {
   @IsNumber()
@@ -50,12 +50,15 @@ export class CreateMetadataDto extends PickType(TemplateMetaModel, [
   isAgeCollected: boolean;
 
   //템플릿 타입
-  @IsEnum(TemplateType)
-  templateType: TemplateType;
+  @IsEnum(TEMPLATE_TYPE)
+  templateType: TEMPLATE_TYPE;
 
   @Type(() => Date)
   @IsOptional()
   startDate: Date;
+
+  @IsString()
+  templateKey: string;
 
   @Type(() => Date)
   @IsOptional()

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -12,11 +13,11 @@ import { TemplateService } from './template.service';
 import { CreateTemplateDto } from 'src/template/dto/create-template.dto';
 import { DataSource } from 'typeorm';
 import { withTransaction } from 'lib/withTransaction.lib';
-import { TemplateType } from 'type/template';
+import { TEMPLATE_TYPE } from 'type/template';
 import { TokenGuard } from 'src/auth/guard/token.guard';
 
 export type GetTemplateParams = {
-  template: TemplateType;
+  template: TEMPLATE_TYPE;
   id: number;
 };
 
@@ -36,7 +37,6 @@ export class TemplateController {
 
     // await new Promise((resolve) => setTimeout(resolve, 3000));
     const data = await this.templateService.getlist();
-
     return data;
   }
 
@@ -44,7 +44,7 @@ export class TemplateController {
   @Post(':template')
   @UseGuards(TokenGuard)
   async createTemplate(
-    @Param('template') template: TemplateType,
+    @Param('template') template: TEMPLATE_TYPE,
     @Body() body: CreateTemplateDto,
   ) {
     const templateId = await withTransaction(this.dataSource, async (qr) => {
@@ -56,10 +56,13 @@ export class TemplateController {
         qr,
       );
 
-      if (template === 'survey') {
-        //Questions
-        await this.templateService.createSurveyQustions(questions, qr, meta);
-        return meta.id;
+      switch (template) {
+        case TEMPLATE_TYPE.SURVEY: {
+          await this.templateService.createSurveyQustions(questions, qr, meta);
+          return meta.id;
+        }
+        default:
+          throw new BadRequestException('잘못된 요청입니다.');
       }
     });
 
@@ -71,7 +74,9 @@ export class TemplateController {
 
   // Detail 페이지 가져오기
   @Get(':template/:id')
+  // @UseGuards(TokenGuard)
   getTemplate(@Param() params: GetTemplateParams) {
+    console.count('멋번요청?');
     const { template, id } = params;
     return this.templateService.getTemplateById(template, id);
   }

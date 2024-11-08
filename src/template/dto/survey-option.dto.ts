@@ -11,5 +11,5 @@ export class QuestionOptionsDto {
 
   @IsString()
   @IsOptional()
-  optionPicture?: string;
+  img?: string;
 }

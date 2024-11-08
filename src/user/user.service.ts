@@ -1,5 +1,7 @@
+import { TemplateService } from './../template/template.service';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
 import { UserModel } from 'src/user/entries/user.entity';
 import { Repository } from 'typeorm';
 
@@ -8,6 +10,9 @@ export class UserService {
   constructor(
     @InjectRepository(UserModel)
     private readonly userRepository: Repository<UserModel>,
+    @InjectRepository(TemplateMetaModel)
+    private readonly templateMetaRepository: Repository<TemplateMetaModel>,
+    private readonly TemplateService: TemplateService,
   ) {}
   async getUser({
     id,
@@ -19,5 +24,10 @@ export class UserService {
     });
 
     return userData;
+  }
+
+  //내가 만든 템플릿 가져오기
+  async getMyContents({ id: userId }: Pick<UserModel, 'id'>) {
+    return await this.TemplateService.getlist({ id: userId });
   }
 }

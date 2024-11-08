@@ -18,4 +18,11 @@ export class UserController {
     });
     return instanceToPlain(userData);
   }
+
+  // 내가만든 템플릿 리스트
+  @Get('/me/contents')
+  @UseGuards(TokenGuard)
+  getMycontents(@User() user: UserModel) {
+    return this.userService.getMyContents({ id: +user.id });
+  }
 }

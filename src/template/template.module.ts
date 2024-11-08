@@ -10,6 +10,7 @@ import { JwtModule } from '@nestjs/jwt';
     JwtModule.register({}),
     TypeOrmModule.forFeature([TemplateMetaModel]),
   ],
+  exports: [TemplateService],
   controllers: [TemplateController],
   providers: [TemplateService],
 })

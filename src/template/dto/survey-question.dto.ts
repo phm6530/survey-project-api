@@ -26,7 +26,7 @@ export class SurveyQuestionDto extends PickType(SurveyQuestion, ['label']) {
   //무슨 문항인지? 주관 / 객관
   @IsOptional()
   @IsString()
-  optionPicture?: string;
+  img?: string;
 
   //무슨 문항인지? 주관 / 객관
   @ValidateIf((o) => o.type === QuestionTypes.SELECT) // 객관식일 때만 options 필수

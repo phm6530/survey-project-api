@@ -27,7 +27,7 @@ export class QustionOption {
   type: QuestionTypes;
 
   @Column({ nullable: true })
-  optionPicture: string;
+  img: string;
 
   @ManyToOne(() => SurveyQuestion, (Questions) => Questions.options, {
     onDelete: 'CASCADE',

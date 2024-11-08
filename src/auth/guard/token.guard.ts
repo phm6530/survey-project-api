@@ -18,6 +18,7 @@ export class TokenGuard implements CanActivate {
     const req = context.switchToHttp().getRequest();
     const body = req.body;
     const path = req.path;
+    const method = req.method;
 
     //anonmous있고 userId없으면 익명처리하기 Comment에서만 익명 통과
     //
@@ -25,14 +26,22 @@ export class TokenGuard implements CanActivate {
       path.startsWith('/comment') &&
       'anonymous' in body &&
       'password' in body &&
-      !body.hasOwnProperty('userId')
+      !body.hasOwnProperty('userId') &&
+      method === 'POST' //Post일 경우..
     ) {
+      return true; // 익명은 통과시킴
+    } else if (
+      path.startsWith('/comment') &&
+      method === 'DELETE' &&
+      'password' in body
+    ) {
+      console.log('익명이네');
       return true; // 익명은 통과시킴
     }
 
     try {
       const rawToken = req.headers['authorization'];
-      const token = rawToken.split(' ')[1];
+      const token = rawToken?.split(' ')[1];
 
       if (!token) {
         throw new UnauthorizedException('정상적인 요청이 아닙니다.');

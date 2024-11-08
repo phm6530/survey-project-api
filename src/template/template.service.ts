@@ -13,7 +13,8 @@ import { QuestionOptionsDto } from 'src/template/dto/survey-option.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GetTemplateParams } from 'src/template/template.controller';
 import { respondentsGroup } from 'util/respondentsFilter.util';
-import { TemplateType } from 'type/template';
+import { GENDER_GROUP, RESPONDENT_TAG, TEMPLATE_TYPE } from 'type/template';
+import { UserModel } from 'src/user/entries/user.entity';
 
 @Injectable()
 export class TemplateService {
@@ -50,6 +51,7 @@ export class TemplateService {
     for (const item of questions) {
       // for...of 사용
       const entity = repository.create({ ...item, templateMeta: meta });
+
       const question = await repository.save(entity); // 비동기 작업을 기다림
 
       // 객관식 처리
@@ -73,37 +75,59 @@ export class TemplateService {
     await repository.save(entity);
   }
 
-  // get List
-  async getlist() {
+  // get List 빈값일수도있으니까 {}로 했음
+  async getlist({ id: userId }: Partial<Pick<UserModel, 'id'>> = {}) {
     //get List..
-    const data = await this.templateRepository
+    const query = this.templateRepository
       .createQueryBuilder('template')
+      .leftJoinAndSelect('template.creator', 'creator')
       .leftJoin('template.respondents', 'respondents')
       .addSelect(['respondents.id', 'respondents.gender', 'respondents.age'])
-      .orderBy('template.id', 'DESC')
-      .getMany();
+      .orderBy('template.id', 'DESC');
 
-    // console.log(data);
+    if (userId) {
+      query.where('creator.id = :userId', { userId });
+    }
 
-    const tester = data.map((templateInfo) => {
+    //여러개 가져올거기에 getMany로..
+    const data = await query.getMany();
+
+    return data.map((templateInfo) => {
       const { respondents, ...rest } = templateInfo;
-
       const respondentsGroupData = respondentsGroup(respondents);
 
+      const maxGroup = { maxCnt: 0 } as {
+        genderGroup: GENDER_GROUP;
+        ageGroup: number;
+        maxCnt: number;
+      };
+
+      for (const [gender, entity] of Object.entries(respondentsGroupData)) {
+        if (gender === GENDER_GROUP.FEMALE || gender === GENDER_GROUP.MALE) {
+          for (const [age, value] of Object.entries(entity)) {
+            if (value > maxGroup.maxCnt) {
+              maxGroup.genderGroup = gender;
+              maxGroup.ageGroup = parseInt(age, 10);
+              maxGroup.maxCnt = value;
+            }
+          }
+        }
+      }
+
+      // 프론트에게 enum으로 MAX표시하는 것임을 알림
       return {
         ...rest,
         respondents: {
+          tag: RESPONDENT_TAG.MAXGROUP,
           allCnt: respondents.length,
-          detail: respondentsGroupData,
+          maxGroup,
         },
       };
     });
-
-    return tester;
   }
 
   //get By Id
-  async getTemplateById(templetType: TemplateType, id: number) {
+  async getTemplateById(templetType: TEMPLATE_TYPE, id: number) {
     const isExistTemplate = await this.templateRepository
       .createQueryBuilder('template')
       .leftJoinAndSelect('template.questions', 'questions')
@@ -137,9 +161,14 @@ export class TemplateService {
 
     const respodentsGroupData = respondentsGroup(respondents);
 
+    //프론트에게 디테일임을 알림 ㅇㅇ
     return {
       ...rest,
-      respondents: { allCnt: respondents.length, defailt: respodentsGroupData },
+      respondents: {
+        tag: RESPONDENT_TAG.DETAIL,
+        allCnt: respondents.length,
+        defailt: respodentsGroupData,
+      },
       questions: questionsTemp,
     };
   }
