@@ -16,3 +16,10 @@ export enum RESPONDENT_TAG {
   DETAIL = 'detail',
   MAXGROUP = 'maxGroup',
 }
+
+export enum TEMPLATERLIST_SORT {
+  ALL = 'all',
+  MALE = 'male',
+  FEMALE = 'female',
+  RESPONDENTS = 'respondents',
+}

@@ -13,7 +13,12 @@ import { QuestionOptionsDto } from 'src/template/dto/survey-option.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GetTemplateParams } from 'src/template/template.controller';
 import { respondentsGroup } from 'util/respondentsFilter.util';
-import { GENDER_GROUP, RESPONDENT_TAG, TEMPLATE_TYPE } from 'type/template';
+import {
+  GENDER_GROUP,
+  RESPONDENT_TAG,
+  TEMPLATE_TYPE,
+  TEMPLATERLIST_SORT,
+} from 'type/template';
 import { UserModel } from 'src/user/entries/user.entity';
 
 @Injectable()
@@ -76,14 +81,86 @@ export class TemplateService {
   }
 
   // get List 빈값일수도있으니까 {}로 했음
-  async getlist({ id: userId }: Partial<Pick<UserModel, 'id'>> = {}) {
-    //get List..
+  async getlist({
+    sort,
+    id: userId,
+  }: { sort?: TEMPLATERLIST_SORT } & Partial<Pick<UserModel, 'id'>>) {
+    const result = await this.templateRepository.query(`
+      WITH AgeGenderCounts AS (
+          SELECT 
+            rm."templateId",
+            rm.age,
+            rm.gender,
+            COUNT(*) AS count
+          FROM respondent_model AS rm
+          GROUP BY rm."templateId", rm.age, rm.gender
+        ),
+        MaxAgeGender AS (
+          SELECT DISTINCT ON ("templateId")
+            "templateId",
+            age,
+            gender,
+            count,
+            RANK() OVER (PARTITION BY "templateId" ORDER BY count DESC) AS rank
+          FROM AgeGenderCounts
+        ),
+        TemplateRespondentCounts AS (
+          SELECT 
+            rm."templateId",
+            COUNT(*) AS total_respondents
+          FROM respondent_model AS rm
+          GROUP BY rm."templateId"
+        )
+        SELECT 
+          tm.*,
+          u.id as creatorId,
+          u.nickname as nickname,
+          u.email as email,
+          u.role as role,
+          mag.age AS max_age_group,
+          mag.gender AS max_gender_group,
+          mag.count AS max_group_count,
+          trc.total_respondents as total
+        FROM template_metadata AS tm
+        LEFT JOIN users AS u ON tm."creatorId" = u.id
+        LEFT JOIN MaxAgeGender AS mag ON tm.id = mag."templateId" AND mag.rank = 1
+        LEFT JOIN TemplateRespondentCounts AS trc ON tm.id = trc."templateId"
+        ORDER BY total DESC NULLS LAST
+        OFFSET 10 LIMIT 10;`);
+
+    console.log(result);
+
     const query = this.templateRepository
       .createQueryBuilder('template')
       .leftJoinAndSelect('template.creator', 'creator')
       .leftJoin('template.respondents', 'respondents')
       .addSelect(['respondents.id', 'respondents.gender', 'respondents.age'])
-      .orderBy('template.id', 'DESC');
+      .addSelect('COUNT(respondents.id)', 'respondentsCount');
+
+    if (sort) {
+      switch (sort) {
+        case TEMPLATERLIST_SORT.ALL:
+          query.orderBy('template.id', 'DESC');
+          break;
+        case TEMPLATERLIST_SORT.FEMALE:
+          console.log('female');
+          break;
+        case TEMPLATERLIST_SORT.MALE:
+          console.log('male');
+          break;
+        case TEMPLATERLIST_SORT.RESPONDENTS:
+          break;
+        default:
+          // 정렬없으면 그냥 최신으로
+          query.orderBy('template.id', 'DESC');
+      }
+    }
+    query
+      .groupBy('template.id')
+      .addGroupBy('creator.id')
+      .addGroupBy('respondents.id')
+      .addGroupBy('respondents.gender')
+      .addGroupBy('respondents.age');
 
     if (userId) {
       query.where('creator.id = :userId', { userId });
@@ -94,6 +171,7 @@ export class TemplateService {
 
     return data.map((templateInfo) => {
       const { respondents, ...rest } = templateInfo;
+
       const respondentsGroupData = respondentsGroup(respondents);
 
       const maxGroup = { maxCnt: 0 } as {

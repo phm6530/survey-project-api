@@ -13,15 +13,13 @@ import { TemplateService } from './template.service';
 import { CreateTemplateDto } from 'src/template/dto/create-template.dto';
 import { DataSource } from 'typeorm';
 import { withTransaction } from 'lib/withTransaction.lib';
-import { TEMPLATE_TYPE } from 'type/template';
+import { TEMPLATE_TYPE, TEMPLATERLIST_SORT } from 'type/template';
 import { TokenGuard } from 'src/auth/guard/token.guard';
 
 export type GetTemplateParams = {
   template: TEMPLATE_TYPE;
   id: number;
 };
-
-export type QsGetList = { sort: 'all' | 'user' | 'male' | 'female' };
 
 @Controller('template')
 export class TemplateController {
@@ -32,11 +30,8 @@ export class TemplateController {
 
   //리스트 가져오기
   @Get()
-  async getList(@Query() query?: QsGetList) {
-    console.log(query);
-
-    // await new Promise((resolve) => setTimeout(resolve, 3000));
-    const data = await this.templateService.getlist();
+  async getList(@Query() query?: { sort?: TEMPLATERLIST_SORT }) {
+    const data = await this.templateService.getlist({ sort: query.sort });
     return data;
   }
 
