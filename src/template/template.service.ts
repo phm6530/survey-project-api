@@ -137,20 +137,21 @@ export class TemplateService {
   ) {
     const repository = qr.manager.getRepository<SurveyQuestion>(SurveyQuestion);
 
-    for (const item of questions) {
-      // for...of 사용
-      const entity = repository.create({ ...item, templateMeta: meta });
+    await Promise.all(
+      questions.map(async (item) => {
+        const entity = repository.create({ ...item, templateMeta: meta });
+        const question = await repository.save(entity); // 비동기 작업을 기다림
 
-      const question = await repository.save(entity); // 비동기 작업을 기다림
-
-      // 객관식 처리
-      if (item.type === 'select') {
-        for (const option of item.options) {
-          // for...of 사용
-          await this.createSurveyOptions(option, question, qr); // 비동기 작업을 기다림
+        if (item.type === 'select') {
+          await Promise.all(
+            item.options.map(
+              async (option) =>
+                await this.createSurveyOptions(option, question, qr),
+            ),
+          );
         }
-      }
-    }
+      }),
+    );
   }
 
   // 객관식 옵션 생성
@@ -166,7 +167,7 @@ export class TemplateService {
 
   // get List 빈값일수도있으니까 {}로 했음
   async getlist({
-    sort,
+    sort = TEMPLATERLIST_SORT.ALL,
     id: userId,
   }: { sort?: TEMPLATERLIST_SORT } & Partial<Pick<UserModel, 'id'>>) {
     let sql = `
@@ -210,16 +211,21 @@ export class TemplateService {
           LEFT JOIN TemplateRespondentCounts AS trc ON tm.id = trc."templateId"
           `;
 
+    if (userId) {
+      sql += ` WHERE tm."creatorId" = 1`;
+    }
+
+    //정렬
     if (sort) {
       switch (sort) {
         case TEMPLATERLIST_SORT.ALL:
           sql += ` ORDER BY tm.id DESC`;
           break;
         case TEMPLATERLIST_SORT.FEMALE:
-          console.log('female');
+          sql += ` ORDER BY (CASE WHEN mag.gender = 'female' THEN 0 WHEN mag.gender = 'male' THEN 1 ELSE 2 END), total DESC NULLS LAST, mag.count DESC NULLS LAST`;
           break;
         case TEMPLATERLIST_SORT.MALE:
-          console.log('male');
+          sql += ` ORDER BY (CASE WHEN mag.gender = 'male' THEN 0 WHEN mag.gender = 'female' THEN 1 ELSE 2 END), total DESC NULLS LAST, mag.count DESC NULLS LAST`;
           break;
         case TEMPLATERLIST_SORT.RESPONDENTS:
           sql += `ORDER BY total DESC NULLS LAST`;
@@ -389,6 +395,6 @@ export class TemplateService {
     if (!isExist) {
       throw new NotFoundException('이미 삭제되었거나 잘못된 요청입니다.');
     }
-    await this.templateRepository.delete({ id, templateType: template });
+    return await this.templateRepository.delete({ id, templateType: template });
   }
 }

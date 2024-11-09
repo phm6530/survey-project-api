@@ -44,7 +44,6 @@ export class TemplateController {
   ) {
     const templateId = await withTransaction(this.dataSource, async (qr) => {
       const { questions, ...metadata } = body;
-
       //Meta
       const meta = await this.templateService.createTemplateMeta(
         { ...metadata },
