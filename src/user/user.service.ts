@@ -28,6 +28,7 @@ export class UserService {
 
   //내가 만든 템플릿 가져오기
   async getMyContents({ id: userId }: Pick<UserModel, 'id'>) {
-    return await this.TemplateService.getlist({ id: userId });
+    console.log(userId);
+    return await this.TemplateService.getList({ id: userId });
   }
 }

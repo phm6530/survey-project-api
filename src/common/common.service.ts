@@ -69,4 +69,24 @@ export class CommonService {
 
     return publicData.publicUrl || null;
   }
+
+  //다음페이지가 있는지 확인
+  async isExistInfinityScrollNextPage(
+    repository: Repository<TemplateMetaModel>,
+    curPageCnt: any[],
+    offset: number,
+    userId: number,
+  ) {
+    const listDataCnt = userId
+      ? await repository.count({
+          where: {
+            creator: {
+              id: userId,
+            },
+          },
+        })
+      : await repository.count({});
+
+    return listDataCnt > curPageCnt.length + offset;
+  }
 }

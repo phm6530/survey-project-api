@@ -1,8 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { CreateTemplateDto } from 'src/template/dto/create-template.dto';
 import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
-import { QueryRunner, Repository } from 'typeorm';
+import { QueryRunner, Repository, UpdateResult } from 'typeorm';
 import { SurveyQuestionDto } from 'src/template/dto/survey-question.dto';
 import {
   QuestionTypes,
@@ -20,6 +24,7 @@ import {
   TEMPLATERLIST_SORT,
 } from 'type/template';
 import { UserModel } from 'src/user/entries/user.entity';
+import { CommonService } from 'src/common/common.service';
 
 //참여자 + 참여자 그룹 별 명수
 export type DetailRespondents = {
@@ -110,23 +115,53 @@ export class TemplateService {
   constructor(
     @InjectRepository(TemplateMetaModel)
     private readonly templateRepository: Repository<TemplateMetaModel>,
+    private readonly commonService: CommonService,
   ) {}
+
+  async getTemplateAllCount() {
+    const cnt = await this.templateRepository.count();
+    return cnt;
+  }
 
   //설문조사 META 생성
   async createTemplateMeta(
     body: Omit<CreateTemplateDto, 'questions'>,
     qr: QueryRunner,
-  ) {
+    metaModel?: TemplateMetaModel,
+  ): Promise<TemplateMetaModel | UpdateResult> {
     //트랜잭션 사용
     const repository =
       qr.manager.getRepository<TemplateMetaModel>(TemplateMetaModel);
 
-    const instance = repository.create({
-      ...body,
-      creator: { id: body.creator.id },
-    });
+    if (metaModel) {
+      return await repository.update(metaModel.id, {
+        ...body,
+        creator: { id: body.creator.id },
+      });
+    } else {
+      const instance = repository.create({
+        ...body,
+        creator: { id: body.creator.id },
+      });
+      return await repository.save(instance);
+    }
+  }
 
-    return await repository.save(instance);
+  //템플릿찾기
+  async existTemplate(id: number) {
+    if (!id) throw new BadRequestException('잘못된 요청..');
+
+    const existsTemplate = await this.templateRepository.findOne({
+      where: {
+        id,
+      },
+      relations: ['creator'],
+    });
+    if (!existsTemplate) {
+      throw new BadRequestException('없는페이지 요청입니다.');
+    } else {
+      return existsTemplate;
+    }
   }
 
   //create Survey Questions..
@@ -165,11 +200,18 @@ export class TemplateService {
     await repository.save(entity);
   }
 
-  // get List 빈값일수도있으니까 {}로 했음
-  async getlist({
+  /**
+   * list의 경우는 page가 있고
+   * item은 userId만 존재한다.
+   *
+   *   */
+  async getList({
     sort = TEMPLATERLIST_SORT.ALL,
     id: userId,
-  }: { sort?: TEMPLATERLIST_SORT } & Partial<Pick<UserModel, 'id'>>) {
+    page = 1,
+  }: { sort?: TEMPLATERLIST_SORT; page?: number } & Partial<
+    Pick<UserModel, 'id'>
+  >) {
     let sql = `
         WITH AgeGenderCounts AS (
             SELECT 
@@ -211,8 +253,14 @@ export class TemplateService {
           LEFT JOIN TemplateRespondentCounts AS trc ON tm.id = trc."templateId"
           `;
 
+    const LIMIT = 12; // 12
+    const offset = (page - 1) * LIMIT; // 0
+    const params = [LIMIT, offset];
+
+    //바꿔야됨
     if (userId) {
-      sql += ` WHERE tm."creatorId" = 1`;
+      sql += ` WHERE tm."creatorId" = $3`;
+      params.push(userId);
     }
 
     //정렬
@@ -237,9 +285,13 @@ export class TemplateService {
     }
 
     // Paging 띄어쓰기 유의
-    sql += ` OFFSET 0 LIMIT 12;`;
+    sql += ` LIMIT $1 OFFSET $2;`;
 
-    const result: TemplateResult[] = await this.templateRepository.query(sql);
+    const result: TemplateResult[] = await this.templateRepository.query(
+      sql,
+      params,
+    );
+
     const resultArr = [] as TemplateItemMetadata<RespondentsAndMaxGroup>[];
 
     result.forEach((row) => {
@@ -274,7 +326,18 @@ export class TemplateService {
       });
     });
 
-    return resultArr;
+    //NextPage...
+    const isNextPage = await this.commonService.isExistInfinityScrollNextPage(
+      this.templateRepository,
+      result,
+      offset,
+      userId,
+    );
+
+    return {
+      data: resultArr,
+      nextPage: isNextPage ? page + 1 : null,
+    };
 
     const query = this.templateRepository
       .createQueryBuilder('template')
@@ -355,10 +418,6 @@ export class TemplateService {
       .orderBy('questions', 'ASC')
       .addOrderBy('options', 'ASC')
       .getOne();
-
-    if (!isExistTemplate) {
-      throw new NotFoundException('없는페이지');
-    }
 
     //Options 제거
     const { questions, respondents, ...rest } = isExistTemplate;
