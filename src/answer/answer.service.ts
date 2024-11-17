@@ -158,7 +158,8 @@ export class AnswerService {
 
       for (const qs of questions) {
         if (qs.type === QuestionTypes.TEXT) {
-          const [textAnswers] = await this.getTextAnswer(qs.id);
+          const [textAnswers, isNextPage] = await this.getTextAnswer(qs.id);
+          console.log('isNextPage', isNextPage);
 
           qs.textAnswers = textAnswers as responseText[];
         }
@@ -187,29 +188,32 @@ export class AnswerService {
     const respodentsGroupData = respondentsGroup(respondents);
 
     //template
-    const newQuestions = questions.map((qs) => {
-      const { textAnswers, options, ...rest } = qs;
+    const newQuestions = await Promise.all(
+      questions.map(async (qs) => {
+        const { options, ...rest } = qs;
 
-      if (qs.type === QuestionTypes.SELECT) {
-        const newOptions = options.map((op) => {
-          const { response, ...rest } = op;
-          const groupData = response.map((e) => {
-            return {
-              gender: e.repondent.gender,
-              age: e.repondent.age,
-            };
+        if (qs.type === QuestionTypes.SELECT) {
+          const newOptions = options.map((op) => {
+            const { response, ...rest } = op;
+            const groupData = response.map((e) => {
+              return {
+                gender: e.repondent.gender,
+                age: e.repondent.age,
+              };
+            });
+            const responseGroupData = respondentsGroup(groupData);
+            return { ...rest, response: responseGroupData };
           });
-          const responseGroupData = respondentsGroup(groupData);
-          return { ...rest, response: responseGroupData };
-        });
 
-        return { ...rest, options: newOptions };
-      } else if (qs.type === QuestionTypes.TEXT) {
-        return { ...rest, textAnswers };
-      } else {
-        throw new BadRequestException('잘못된 요청입니다..');
-      }
-    });
+          return { ...rest, options: newOptions };
+        } else if (qs.type === QuestionTypes.TEXT) {
+          const [textAnswers, isNextPage] = await this.getTextAnswer(qs.id);
+          return { ...rest, textAnswers, isNextPage };
+        } else {
+          throw new BadRequestException('잘못된 요청입니다.');
+        }
+      }),
+    );
 
     return {
       ...rest,
