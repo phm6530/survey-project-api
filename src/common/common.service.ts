@@ -3,6 +3,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createClient } from '@supabase/supabase-js';
+import * as dayjs from 'dayjs';
 import { extname } from 'path';
 import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
 import { QueryRunner, Repository } from 'typeorm';
@@ -88,5 +89,9 @@ export class CommonService {
       : await repository.count({});
 
     return listDataCnt > curPageCnt.length + offset;
+  }
+
+  transformTimeformat(date: Date, format: string = 'YYYY-MM-DD HH:mm:ss') {
+    return dayjs(date).format(format);
   }
 }

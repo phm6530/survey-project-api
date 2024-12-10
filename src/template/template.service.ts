@@ -297,7 +297,7 @@ export class TemplateService {
     result.forEach((row) => {
       resultArr.push({
         id: row.id,
-        createdAt: row.createAt.toLocaleString(),
+        createdAt: this.commonService.transformTimeformat(row.createAt),
         title: row.title,
         description: row.description,
         isGenderCollected: row.isGenderCollected,
@@ -333,6 +333,8 @@ export class TemplateService {
       offset,
       userId,
     );
+
+    console.log(resultArr);
 
     return {
       data: resultArr,

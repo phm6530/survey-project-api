@@ -2,7 +2,6 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
-  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
@@ -97,7 +96,7 @@ export class AuthService {
     });
 
     if (!isExistUser) {
-      throw new NotFoundException(
+      throw new BadRequestException(
         '없는 사용자거나 패스워드가 일치하지않습니다.',
       );
     }
@@ -172,14 +171,12 @@ export class AuthService {
     //     id,
     //   },
     // });
-
     // console.log(find);
-
     //업데이트
-    const test = await this.refreshTokenRepository.update(
-      { user: { id } },
-      { isVaild: false },
-    );
+    // const test = await this.refreshTokenRepository.update(
+    //   { user: { id } },
+    //   { isVaild: false },
+    // );
     // console.log('test:', test);
   }
 }
