@@ -166,18 +166,6 @@ export class AnswerService {
       }
     }
 
-    // const getTextAnswers = await this.
-
-    //   .leftJoinAndSelect('template.questions', 'questions')
-
-    //   .leftJoinAndSelect('questions.options', 'options')
-    //   .leftJoinAndSelect('options.response', 'response')
-    //   .leftJoinAndSelect('response.repondent', 'repondent')
-    //   .where('template.id = :id', { id })
-    //   .andWhere('template.templateType =:templateType', { template })
-
-    //   .getOne();
-
     if (!data) {
       throw new NotFoundException('이미 삭제되었거나 잘못된 요청입니다.');
     }

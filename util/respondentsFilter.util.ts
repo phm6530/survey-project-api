@@ -1,7 +1,7 @@
 import { AgeGroup, GenderGrop } from 'src/answer/entries/respondent.entity';
 
 export const respondentsGroup = (
-  respondents: { gender: GenderGrop; age: AgeGroup }[],
+  respondents: { gender: GenderGrop | null; age: AgeGroup | null }[],
 ) => {
   const filterData = {
     selectUserCnt: 0,

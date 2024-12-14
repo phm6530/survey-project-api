@@ -137,7 +137,11 @@ export class TemplateController {
   @UseInterceptors(ExistUserTemplate)
   async getTemplate(@Param() params: GetTemplateParams) {
     const { template, id } = params;
+
+    // Template있는지 검사부터
     await this.templateService.existTemplate(params.id);
+
+    // Template 전달
     return this.templateService.getTemplateById(template, id);
   }
 

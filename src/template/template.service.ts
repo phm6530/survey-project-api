@@ -292,6 +292,8 @@ export class TemplateService {
       params,
     );
 
+    console.log(result);
+
     const resultArr = [] as TemplateItemMetadata<RespondentsAndMaxGroup>[];
 
     result.forEach((row) => {
@@ -316,7 +318,7 @@ export class TemplateService {
         },
         creator: {
           id: row.creatorId,
-          createAt: row.createAt.toLocaleDateString(),
+          createAt: row.createAt?.toLocaleDateString(),
           email: row.email,
           nickname: row.nickname,
           role: row.role as USER_ROLE,
@@ -334,117 +336,121 @@ export class TemplateService {
       userId,
     );
 
-    console.log(resultArr);
-
     return {
       data: resultArr,
       nextPage: isNextPage ? page + 1 : null,
     };
-
-    const query = this.templateRepository
-      .createQueryBuilder('template')
-      .leftJoinAndSelect('template.creator', 'creator')
-      .leftJoin('template.respondents', 'respondents')
-      .addSelect(['respondents.id', 'respondents.gender', 'respondents.age'])
-      .addSelect('COUNT(respondents.id)', 'respondentsCount');
-
-    if (sort) {
-      switch (sort) {
-        case TEMPLATERLIST_SORT.ALL:
-          query.orderBy('template.id', 'DESC');
-          break;
-        case TEMPLATERLIST_SORT.FEMALE:
-          console.log('female');
-          break;
-        case TEMPLATERLIST_SORT.MALE:
-          console.log('male');
-          break;
-        case TEMPLATERLIST_SORT.RESPONDENTS:
-          break;
-        default:
-          // 정렬없으면 그냥 최신으로
-          query.orderBy('template.id', 'DESC');
-      }
-    }
-    query
-      .groupBy('template.id')
-      .addGroupBy('creator.id')
-      .addGroupBy('respondents.id')
-      .addGroupBy('respondents.gender')
-      .addGroupBy('respondents.age');
-
-    if (userId) {
-      query.where('creator.id = :userId', { userId });
-    }
-
-    //여러개 가져올거기에 getMany로..
-    const data = await query.getMany();
-
-    return data.map((templateInfo) => {
-      const { respondents, ...rest } = templateInfo;
-
-      const respondentsGroupData = respondentsGroup(respondents);
-
-      const maxGroup = { maxCnt: 0 } as {
-        genderGroup: GENDER_GROUP;
-        ageGroup: number;
-        maxCnt: number;
-      };
-
-      for (const [gender, entity] of Object.entries(respondentsGroupData)) {
-        if (gender === GENDER_GROUP.FEMALE || gender === GENDER_GROUP.MALE) {
-          for (const [age, value] of Object.entries(entity)) {
-            if (value > maxGroup.maxCnt) {
-              maxGroup.genderGroup = gender;
-              maxGroup.ageGroup = parseInt(age, 10);
-              maxGroup.maxCnt = value;
-            }
-          }
-        }
-      }
-    });
   }
 
   //get By Id
   async getTemplateById(templetType: TEMPLATE_TYPE, id: number) {
-    const isExistTemplate = await this.templateRepository
+    const getQuestions = await this.templateRepository
       .createQueryBuilder('template')
       .leftJoinAndSelect('template.questions', 'questions')
-      .leftJoinAndSelect('questions.options', 'options') // questions와 options 간의 관계 추가
-      .leftJoinAndSelect('template.respondents', 'respondents')
-      .leftJoinAndSelect('template.creator', 'user')
+      .leftJoinAndSelect('questions.options', 'options')
       .where('template.id = :id', { id })
       .andWhere('template.templateType = :templateType', {
         templateType: templetType,
       })
+      .select([
+        'template.id', // template id는 필요할 것 같아서 포함
+        'questions',
+        'options',
+      ])
       .orderBy('questions', 'ASC')
       .addOrderBy('options', 'ASC')
       .getOne();
 
-    //Options 제거
-    const { questions, respondents, ...rest } = isExistTemplate;
+    const getTemplateMetaData = await this.templateRepository.query(
+      `
+        WITH AgeGenderCounts AS (
+          SELECT 
+            rm."templateId",
+            rm.age,
+            rm.gender,
+            COUNT(*) AS count
+          FROM respondent_model AS rm
+          GROUP BY rm."templateId", rm.age, rm.gender
+        ),
+        MaxAgeGender AS (
+          SELECT DISTINCT ON ("templateId")
+            "templateId",
+            age,
+            gender,
+            count
+          FROM AgeGenderCounts
+          ORDER BY "templateId", count DESC
+        ),
+        TemplateRespondentCounts AS (
+          SELECT 
+            rm."templateId",
+            COUNT(*) AS total
+          FROM respondent_model AS rm
+          GROUP BY rm."templateId"
+        )
+        SELECT 
+          tm.*,
+          u.nickname as nickname,
+          u.email as email,
+          u.role as role,
+          mag.age AS max_age_group,
+          mag.gender AS max_gender_group,
+          mag.count AS max_group_count,
+          trc.total
+        FROM template_metadata AS tm
+        LEFT JOIN users AS u ON tm."creatorId" = u.id
+        LEFT JOIN MaxAgeGender AS mag ON tm.id = mag."templateId"
+        LEFT JOIN TemplateRespondentCounts AS trc ON tm.id = trc."templateId"
+        WHERE tm.id = $1 AND tm."templateType" = $2
+      `,
+      [id, templetType],
+    );
 
-    const questionsTemp = questions.map((qs) => {
-      if (qs.type === QuestionTypes.TEXT) {
-        //주관식 Options 프로퍼티 삭제
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { options, ...rest } = qs;
-        return rest;
-      }
-      return qs;
-    });
+    // id 뺴고 Questions만
+    const { questions } = getQuestions;
 
-    const respodentsGroupData = respondentsGroup(respondents);
+    console.log(getTemplateMetaData);
+
+    const Tests = (
+      row: TemplateResult,
+    ): TemplateItemMetadata<RespondentsAndMaxGroup> => {
+      return {
+        id: row.id,
+        createdAt: this.commonService.transformTimeformat(row.createAt),
+        title: row.title,
+        description: row.description,
+        isGenderCollected: row.isGenderCollected,
+        isAgeCollected: row.isAgeCollected,
+        startDate: row.startDate?.toLocaleDateString() || null,
+        endDate: row.endDate?.toLocaleDateString() || null,
+        thumbnail: row.thumbnail,
+        respondents: {
+          tag: RESPONDENT_TAG.MAXGROUP,
+          allCnt: parseInt(row.total, 10),
+          maxGroup: {
+            maxCnt: parseInt(row.max_group_count, 10),
+            genderGroup: (row.max_gender_group as GENDER_GROUP) || null,
+            ageGroup: row.max_age_group || null,
+          },
+        },
+        creator: {
+          id: row.creatorId,
+          createAt: row.createAt?.toLocaleDateString(),
+          email: row.email,
+          nickname: row.nickname,
+          role: row.role as USER_ROLE,
+        },
+        templateKey: row.templateKey,
+        templateType: row.templateType as TEMPLATE_TYPE,
+      };
+    };
+
+    const metaData = Tests(getTemplateMetaData[0]);
 
     //프론트에게 디테일임을 알림 ㅇㅇ
     return {
-      ...rest,
-      respondents: {
-        tag: RESPONDENT_TAG.DETAIL,
-        allCnt: respondents.length,
-        defailt: respodentsGroupData,
-      },
-      questions: questionsTemp,
+      ...metaData,
+      questions,
     };
   }
 
