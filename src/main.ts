@@ -6,14 +6,18 @@ import * as cookieParser from 'cookie-parser';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // cors
+  // // cors
+  // app.enableCors({
+  //   origin: process.env.CORS_ALLOWED_ORIGINS,
+  //   credentials: true, // 쿠키 허용 여부 (선택)
+  //   methods: 'GET,POST,PUT,DELETE,PATCH', // 허용할 메서드 지정
+  //   allowedHeaders: 'Content-Type, Authorization',
+  // });
+  //Cookie
   app.enableCors({
-    origin: process.env.CORS_ALLOWED_ORIGINS,
-    credentials: true, // 쿠키 허용 여부 (선택)
-    methods: 'GET,POST,PUT,DELETE,PATCH', // 허용할 메서드 지정
-    allowedHeaders: 'Content-Type, Authorization',
+    origin: 'http://localhost:3000', // 클라이언트 URL
+    credentials: true, // 쿠키 전송 허용
   });
-
   // Pipe
   app.useGlobalPipes(
     new ValidationPipe({
@@ -28,11 +32,7 @@ async function bootstrap() {
     }),
   );
   app.use(cookieParser());
-  //Cookie
-  app.enableCors({
-    origin: 'http://localhost:3000', // 클라이언트 URL
-    credentials: true, // 쿠키 전송 허용
-  });
+
   // Port
   await app.listen(5000);
 }

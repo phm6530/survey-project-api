@@ -52,14 +52,13 @@ export class CommonService {
     const uniqueFileName = `${uuid4()}${extname(file.originalname)}`;
 
     //파일업로드
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from('images')
       .upload(`temp/${key}/${uniqueFileName}`, file.buffer, {
         contentType: file.mimetype,
       });
 
     if (error) {
-      console.log(error);
       throw new Error('파일 업로드 실패');
     }
 
@@ -93,5 +92,34 @@ export class CommonService {
 
   transformTimeformat(date: Date, format: string = 'YYYY-MM-DD HH:mm:ss') {
     return dayjs(date).format(format);
+  }
+
+  parseTime(time: string | number): number {
+    if (typeof time === 'number') {
+      return time; // 이미 초 단위라면 그대로 반환
+    }
+
+    const matches = time.match(/^(\d+)([smhdy])$/);
+    if (!matches) {
+      throw new Error('Invalid time format');
+    }
+
+    const [, value, unit] = matches;
+    const num = parseInt(value, 10);
+
+    switch (unit) {
+      case 's':
+        return num; // 초
+      case 'm':
+        return num * 60; // 분 -> 초
+      case 'h':
+        return num * 3600; // 시 -> 초
+      case 'd':
+        return num * 86400; // 일 -> 초
+      case 'y':
+        return num * 31536000; // 년 -> 초
+      default:
+        throw new Error('Invalid time unit');
+    }
   }
 }

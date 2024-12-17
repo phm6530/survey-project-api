@@ -17,12 +17,19 @@ import { SignInDto } from 'src/auth/dto/user-signIn.dto';
 import { Response } from 'express';
 import { UserInTokenGuard } from 'src/auth/guard/user-in-token.guard';
 import { UserModel } from 'src/user/entries/user.entity';
+import { CommonService } from 'src/common/common.service';
+import { ConfigService } from '@nestjs/config';
+import { ENV_KEYS } from 'config/jwt.config';
+import { JwtService } from '@nestjs/jwt';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly dataSource: DataSource,
+    private readonly commonService: CommonService,
+    private readonly configService: ConfigService,
+    private readonly JwtService: JwtService,
   ) {}
   /**
    * + 비밀번호 변경
@@ -35,28 +42,26 @@ export class AuthController {
     @Body() body: SignInDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { accessToken, user, refreshToken } =
-      await this.authService.loginUser(body);
+    const { token, user } = await this.authService.loginUser(body);
 
-    // await this.authService.saveRefreshToken(user, refreshToken);
-
-    // refresh Token 일단 60분
-    res.cookie('refreshToken', refreshToken, {
+    res.cookie('token', token, {
       httpOnly: true,
-      secure: false, //https 여부
-      maxAge: 60 * 60 * 1000, // 60분 테스트
+      secure: process.env.NODE_ENV === 'production', // 운영에선 true
+      sameSite: false,
+      maxAge:
+        this.commonService.parseTime(
+          this.configService.get<string>(ENV_KEYS.JWT.JWT_TOKEN_EXPIRES_IN),
+        ) * 1000,
       path: '/',
     });
 
-    return { user: instanceToPlain(user), accessToken };
+    return { user: instanceToPlain(user), token };
   }
 
   @Patch('/logout')
   // @UseGuards(UserInTokenGuard)
   async logout(@Res({ passthrough: true }) res: Response) {
-    console.log('요청?');
-
-    res.cookie('refreshToken', '', {
+    res.cookie('token', '', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       maxAge: 0, // 쿠키 만료
@@ -80,7 +85,7 @@ export class AuthController {
   @Get('/accesstoken')
   @UseGuards(UserInTokenGuard)
   async refreshAccessToken(@Request() req: any) {
-    console.log('토큰 재발급 ');
+    console.log('AccessToken 발급');
 
     const { id } = req.user as UserModel;
     const refreshAccessToken = await this.authService.createAccessToken(id);
@@ -92,6 +97,7 @@ export class AuthController {
     //   path: '/',
     // });
 
+    console.log(refreshAccessToken);
     return { message: 'accessToken Refresh', refreshAccessToken };
   }
 

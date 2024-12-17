@@ -14,6 +14,8 @@ import { instanceToPlain } from 'class-transformer';
 import { SignInDto } from 'src/auth/dto/user-signIn.dto';
 import { JwtService } from '@nestjs/jwt';
 import { RefreshTokenModel } from 'src/auth/entries/refreshToken.entity';
+import { ENV_KEYS } from 'config/jwt.config';
+import { CommonService } from 'src/common/common.service';
 
 @Injectable()
 export class AuthService {
@@ -24,6 +26,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     @InjectRepository(RefreshTokenModel)
     private readonly refreshTokenRepository: Repository<RefreshTokenModel>,
+    private readonly commonService: CommonService,
   ) {}
 
   //password Hash
@@ -31,7 +34,7 @@ export class AuthService {
     //salt
     return await bcrypt.hash(
       password,
-      parseInt(this.ConfigService.get<string>('HASH')),
+      parseInt(this.ConfigService.get<string>(ENV_KEYS.AUTH.HASH)),
     );
   }
 
@@ -48,13 +51,14 @@ export class AuthService {
   async verflyToken(token: string): Promise<UserModel> {
     try {
       const payload = await this.jwtService.verify(token, {
-        secret: this.ConfigService.get<string>('SECRET_KEY'),
+        secret: this.ConfigService.get<string>(ENV_KEYS.AUTH.SCRECT_KEY),
       });
 
       return payload as UserModel;
     } catch (error) {
-      console.log(error);
-      throw new UnauthorizedException('유효한 토큰이 아닙니다.');
+      throw new UnauthorizedException(
+        error.message || '유효한 토큰이 아닙니다.',
+      );
     }
   }
 
@@ -101,38 +105,46 @@ export class AuthService {
       );
     }
     const verfiy = await this.verifyPassword(password, isExistUser.password);
+
     if (!verfiy) {
       throw new BadRequestException('비밀번호가 일치하지 않습니다');
     } else {
       const { role, email, nickname, id } = isExistUser;
-      //엑세스 10분
-      const accessToken = await this.addToken(
-        { id, role, email, nickname },
-        30,
-      );
 
-      //리프래시 토큰 1시간
-      const refreshToken = await this.addToken(
-        { id, role, email, nickname },
-        3600,
-      );
-      return { accessToken, refreshToken, user: isExistUser };
+      //엑세스 토큰 1분
+      const token = this.addToken({ id, role, email, nickname });
+      return { token, user: isExistUser };
     }
   }
 
   // JWT 생성
-  addToken(
-    user: Pick<UserModel, 'role' | 'email' | 'nickname' | 'id'>,
-    expiresIn: number = 300,
-  ) {
-    //ScrectKey Get
-    const secrectKey = this.ConfigService.get<string>('SECRET_KEY');
-    const payload = { ...user };
+  addToken(user: Pick<UserModel, 'role' | 'email' | 'nickname' | 'id'>) {
+    /** 토큰 한개로 관리하기 위해서 2가지 시간 설정*/
+    const refreshTime = this.ConfigService.get<string>(
+      ENV_KEYS.JWT.JWT_TOKEN_REFRESH_IN,
+    );
+    const expireTime = this.ConfigService.get<string>(
+      ENV_KEYS.JWT.JWT_TOKEN_EXPIRES_IN,
+    );
 
-    return this.jwtService.sign(payload, {
+    // 업데이트 주기
+    const refreshExp =
+      this.commonService.parseTime(refreshTime) + Math.floor(Date.now() / 1000);
+
+    //ScrectKey Get
+    const secrectKey = this.ConfigService.get<string>(ENV_KEYS.AUTH.SCRECT_KEY);
+
+    const payload = { ...user, refreshExp };
+
+    const token = this.jwtService.sign(payload, {
       secret: secrectKey,
-      expiresIn,
+      expiresIn: expireTime,
     });
+
+    const decodeT = this.jwtService.decode(token);
+    console.log(decodeT);
+
+    return token;
   }
 
   async createAccessToken(id: number) {
@@ -141,15 +153,12 @@ export class AuthService {
         id,
       },
     });
-    return this.addToken(
-      {
-        role: user.role,
-        email: user.email,
-        nickname: user.nickname,
-        id: user.id,
-      },
-      30,
-    );
+    return this.addToken({
+      role: user.role,
+      email: user.email,
+      nickname: user.nickname,
+      id: user.id,
+    });
   }
 
   async saveRefreshToken(user: UserModel, token: string) {
@@ -163,20 +172,5 @@ export class AuthService {
       console.error(error);
       throw new InternalServerErrorException('서버오류');
     }
-  }
-
-  async invalidateRefreshToken(id: number) {
-    // const find = await this.userModelRepository.findOne({
-    //   where: {
-    //     id,
-    //   },
-    // });
-    // console.log(find);
-    //업데이트
-    // const test = await this.refreshTokenRepository.update(
-    //   { user: { id } },
-    //   { isVaild: false },
-    // );
-    // console.log('test:', test);
   }
 }

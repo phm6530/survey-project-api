@@ -8,15 +8,11 @@ import { CreateTemplateDto } from 'src/template/dto/create-template.dto';
 import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
 import { QueryRunner, Repository, UpdateResult } from 'typeorm';
 import { SurveyQuestionDto } from 'src/template/dto/survey-question.dto';
-import {
-  QuestionTypes,
-  SurveyQuestion,
-} from 'src/template/entries/survey/survey-questions.entity';
+import { SurveyQuestion } from 'src/template/entries/survey/survey-questions.entity';
 import { QustionOption } from 'src/template/entries/survey/survey-option.entity';
 import { QuestionOptionsDto } from 'src/template/dto/survey-option.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GetTemplateParams } from 'src/template/template.controller';
-import { respondentsGroup } from 'util/respondentsFilter.util';
 import {
   GENDER_GROUP,
   RESPONDENT_TAG,
@@ -292,8 +288,6 @@ export class TemplateService {
       params,
     );
 
-    console.log(result);
-
     const resultArr = [] as TemplateItemMetadata<RespondentsAndMaxGroup>[];
 
     result.forEach((row) => {
@@ -408,8 +402,6 @@ export class TemplateService {
 
     // id 뺴고 Questions만
     const { questions } = getQuestions;
-
-    console.log(getTemplateMetaData);
 
     const Tests = (
       row: TemplateResult,

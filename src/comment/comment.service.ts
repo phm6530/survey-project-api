@@ -97,10 +97,7 @@ export class CommentService {
       throw new NotFoundException('이미 삭제되었거나 잘못된 요청입니다');
     }
 
-    console.log(user, password);
-
     if (!user && password) {
-      console.log('안들어오나??');
       await this.authService.verifyPassword(password, isExistComment.password);
     }
     return await this.commentRepository.delete({ id });

@@ -11,6 +11,7 @@ import {
 import { TemplateService } from 'src/template/template.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { ENV_KEYS } from 'config/jwt.config';
 
 @Injectable()
 export class ExistUserTemplate implements NestInterceptor {
@@ -41,7 +42,7 @@ export class ExistUserTemplate implements NestInterceptor {
 
       // 토큰 유효성 및 만료 여부 검증
       const decodedUserData = this.JwtService.verify(token, {
-        secret: this.configService.get<string>('SECRET_KEY'),
+        secret: this.configService.get<string>(ENV_KEYS.AUTH.SCRECT_KEY),
       });
 
       if (isExistTemplate.creator.email !== decodedUserData.email) {

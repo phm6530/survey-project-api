@@ -9,6 +9,7 @@ import {
   Put,
   Query,
   Req,
+  UnauthorizedException,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -21,7 +22,7 @@ import { TokenGuard } from 'src/auth/guard/token.guard';
 import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
 import { CommonService } from 'src/common/common.service';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ExistUserTemplate } from 'src/template/interceptor/existUserTemplate';
+import { TemplateEditGuard } from './guard/template-edit.guard';
 
 export type GetTemplateParams = {
   template: TEMPLATE_TYPE;
@@ -118,7 +119,6 @@ export class TemplateController {
           existsTemplate,
         );
 
-        console.log(meta);
         // await this.templateService.createSurveyQustions();
       });
 
@@ -132,14 +132,17 @@ export class TemplateController {
   }
 
   // Detail 페이지 가져오기
-  @Post(':template/:id')
-  // @UseGuards(TokenGuard)
-  @UseInterceptors(ExistUserTemplate)
+  @Get(':template/:id')
+  @UseGuards(TemplateEditGuard)
+  // @UseInterceptors(ExistUserTemplate)
   async getTemplate(@Param() params: GetTemplateParams) {
     const { template, id } = params;
 
     // Template있는지 검사부터
-    await this.templateService.existTemplate(params.id);
+    // const test = await this.templateService.existTemplate(params.id);
+    // if (test.creator.email !== req.user.email) {
+    //   return new UnauthorizedException('에러');
+    // }
 
     // Template 전달
     return this.templateService.getTemplateById(template, id);

@@ -6,6 +6,8 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ENV_KEYS } from 'config/jwt.config';
+import { User } from 'src/template/template.service';
 
 @Injectable()
 export class TokenGuard implements CanActivate {
@@ -22,34 +24,55 @@ export class TokenGuard implements CanActivate {
 
     //anonmous있고 userId없으면 익명처리하기 Comment에서만 익명 통과
     //
+    const isAnonymousCommentCreation = (
+      path: string,
+      method: string,
+      body: any,
+    ): boolean => {
+      return (
+        path.startsWith('/comment') &&
+        method === 'POST' &&
+        'anonymous' in body &&
+        'password' in body &&
+        !body.hasOwnProperty('userId')
+      );
+    };
+
+    const isAnonymousCommentDeletion = (
+      path: string,
+      method: string,
+      body: any,
+    ): boolean => {
+      return (
+        path.startsWith('/comment') && method === 'DELETE' && 'password' in body
+      );
+    };
+
+    // 사용 예시
     if (
-      path.startsWith('/comment') &&
-      'anonymous' in body &&
-      'password' in body &&
-      !body.hasOwnProperty('userId') &&
-      method === 'POST' //Post일 경우..
+      isAnonymousCommentCreation(path, method, body) ||
+      isAnonymousCommentDeletion(path, method, body)
     ) {
-      return true; // 익명은 통과시킴
-    } else if (
-      path.startsWith('/comment') &&
-      method === 'DELETE' &&
-      'password' in body
-    ) {
-      console.log('익명이네');
-      return true; // 익명은 통과시킴
+      return true; // 익명 댓글 작성/삭제 허용
     }
 
     try {
-      const rawToken = req.headers['authorization'];
-      const token = rawToken?.split(' ')[1];
+      const authHeader = req.headers['authorization'];
+      const headerToken = authHeader?.split(' ')[1];
+
+      // 쿠키에서 토큰 추출
+      const cookieToken = req.cookies['token'];
+
+      // 두 토큰 중 하나 사용 (헤더 우선)
+      const token = headerToken || cookieToken;
 
       if (!token) {
-        throw new UnauthorizedException('정상적인 요청이 아닙니다.');
+        throw new UnauthorizedException('인증 토큰이 없습니다.');
       }
 
       // 토큰 유효성 및 만료 여부 검증
-      const decodedUserData = this.JwtService.verify(token, {
-        secret: this.configService.get<string>('SECRET_KEY'),
+      const decodedUserData: User = this.JwtService.verify(token, {
+        secret: this.configService.get<string>(ENV_KEYS.AUTH.SCRECT_KEY),
       });
 
       req.user = decodedUserData;

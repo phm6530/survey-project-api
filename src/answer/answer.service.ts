@@ -159,7 +159,6 @@ export class AnswerService {
       for (const qs of questions) {
         if (qs.type === QuestionTypes.TEXT) {
           const [textAnswers, isNextPage] = await this.getTextAnswer(qs.id);
-          console.log('isNextPage', isNextPage);
 
           qs.textAnswers = textAnswers as responseText[];
         }

@@ -21,7 +21,7 @@ export class UserIdToUserInterceptor implements NestInterceptor {
     next: CallHandler,
   ): Promise<Observable<any>> {
     const req = context.switchToHttp().getRequest();
-    const path = req.originalUrl;
+    // const path = req.originalUrl;
 
     const { userId: id } = req.body;
 
@@ -31,11 +31,8 @@ export class UserIdToUserInterceptor implements NestInterceptor {
       });
       req.body.user = userData;
     }
-    console.log('req body :', req.body);
 
-    const now = new Date();
-
-    console.log(`[request] : ${path} ${now.toLocaleString('kr')}`);
+    // const now = new Date();
 
     // router 로직 전부 실행..
     return next.handle();

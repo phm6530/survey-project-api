@@ -33,7 +33,6 @@ export class ExistTemplateAndMatchUser implements NestInterceptor {
     // 템플릿을 생성한 사용자와 요청사용자가 다를때는 에러
     const existsTemplate = await this.TemplateService.existTemplate(id);
     if (!existsTemplate || existsTemplate?.creator?.email !== user?.email) {
-      console.log('걸?');
       throw new BadRequestException('잘못된 요청입니다.');
     }
 

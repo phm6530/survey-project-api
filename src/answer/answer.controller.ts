@@ -50,7 +50,6 @@ export class AnswerController {
   @Get('/question/:id/:page')
   async getTextAnswerPage(@Param() params: { id: string; page: string }) {
     const { id, page } = params;
-    console.log(id, page);
 
     const [answers, isNextPage] = await this.answerService.getTextAnswer(
       +id,
