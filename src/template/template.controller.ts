@@ -23,6 +23,7 @@ import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
 import { CommonService } from 'src/common/common.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TemplateEditGuard } from './guard/template-edit.guard';
+import { JwtPayload } from 'src/auth/type/jwt';
 
 export type GetTemplateParams = {
   template: TEMPLATE_TYPE;
@@ -150,8 +151,18 @@ export class TemplateController {
 
   // 삭제
   @Delete(':template/:id')
-  deleteTemplate(@Param() params: GetTemplateParams) {
+  @UseGuards(TokenGuard)
+  async deleteTemplate(
+    @Param() params: GetTemplateParams,
+    @Req() req: { user: JwtPayload },
+  ) {
     const { template, id } = params;
+
+    const isExistUser = await this.templateService.existTemplate(id);
+    if (isExistUser.creator.email !== req.user.email) {
+      throw new UnauthorizedException('템플릿에 대한 접근 권한이 없습니다');
+    }
+
     return this.templateService.deleteTemplateById({ template, id });
   }
 }

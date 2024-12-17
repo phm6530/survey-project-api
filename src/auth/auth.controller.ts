@@ -5,6 +5,7 @@ import {
   Get,
   Patch,
   Post,
+  Req,
   Request,
   Res,
   UseGuards,
@@ -21,6 +22,8 @@ import { CommonService } from 'src/common/common.service';
 import { ConfigService } from '@nestjs/config';
 import { ENV_KEYS } from 'config/jwt.config';
 import { JwtService } from '@nestjs/jwt';
+import { TokenGuard } from './guard/token.guard';
+import { JwtPayload } from './type/jwt';
 
 @Controller('auth')
 export class AuthController {
@@ -97,10 +100,13 @@ export class AuthController {
     //   path: '/',
     // });
 
-    console.log(refreshAccessToken);
     return { message: 'accessToken Refresh', refreshAccessToken };
   }
 
-  @Get('check')
-  CheckAuth() {}
+  @Get('verify')
+  @UseGuards(TokenGuard)
+  CheckAuth(@Req() req: { user: JwtPayload }) {
+    console.log('체크함?');
+    return true;
+  }
 }

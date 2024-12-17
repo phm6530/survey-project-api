@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ENV_KEYS } from 'config/jwt.config';
-import { User } from 'src/template/template.service';
+import { JwtPayload } from '../type/jwt';
 
 @Injectable()
 export class TokenGuard implements CanActivate {
@@ -71,15 +71,18 @@ export class TokenGuard implements CanActivate {
       }
 
       // 토큰 유효성 및 만료 여부 검증
-      const decodedUserData: User = this.JwtService.verify(token, {
+      const decodedUserData: JwtPayload = this.JwtService.verify(token, {
         secret: this.configService.get<string>(ENV_KEYS.AUTH.SCRECT_KEY),
       });
 
-      req.user = decodedUserData;
+      req.user = decodedUserData as JwtPayload;
+
       return true;
     } catch (error) {
-      console.error(error.message);
-      throw new UnauthorizedException('토큰이 만료되었거나 유효하지 않습니다.');
+      console.log(error.message);
+      throw new UnauthorizedException(
+        `${error.message} : 토큰이 만료되었거나 유효하지 않습니다.`,
+      );
     }
   }
 }
