@@ -6,14 +6,14 @@ import { CommentModel } from 'src/comment/entries/comment.entity';
 import { BaseModel } from 'src/common/entries/base.entity';
 import { ReplyModel } from 'src/reply/entries/reply.entity';
 import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
-import { RoleEnum } from 'type/auth';
+import { USER_ROLE } from 'type/auth';
 import { Column, Entity, OneToMany } from 'typeorm';
 
 //default
 @Entity('users')
 export class UserModel extends BaseModel {
-  @Column({ type: 'enum', enum: RoleEnum, default: RoleEnum.USER })
-  role: RoleEnum;
+  @Column({ type: 'enum', enum: USER_ROLE, default: USER_ROLE.USER })
+  role: USER_ROLE;
 
   @Column({ unique: true, length: 20 })
   @IsString()

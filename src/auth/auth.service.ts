@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
   UnauthorizedException,
@@ -42,7 +43,7 @@ export class AuthService {
   async verifyPassword(inputPassword: string, storedHashedPassword: string) {
     const isVerify = await bcrypt.compare(inputPassword, storedHashedPassword);
     if (!isVerify) {
-      throw new BadRequestException('비밀번호가 일치하지 않습니다.');
+      throw new ForbiddenException('비밀번호가 일치하지 않습니다.');
     }
     return isVerify;
   }

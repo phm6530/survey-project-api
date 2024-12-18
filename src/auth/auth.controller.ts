@@ -58,7 +58,7 @@ export class AuthController {
       path: '/',
     });
 
-    return { user: instanceToPlain(user), token };
+    return { user: instanceToPlain(user) };
   }
 
   @Patch('/logout')

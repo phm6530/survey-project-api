@@ -1,6 +1,8 @@
+import { USER_ROLE } from 'type/auth';
+
 interface JwtPayload {
   id: number;
-  role: string;
+  role: USER_ROLE;
   email: string;
   nickname: string;
   refreshExp: number;

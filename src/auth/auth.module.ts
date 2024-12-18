@@ -8,6 +8,7 @@ import { RefreshTokenModel } from 'src/auth/entries/refreshToken.entity';
 
 import { CommonModule } from 'src/common/common.module';
 import { TokenGuard } from './guard/token.guard';
+import { TokenAndUserData } from './guard/tokenAndUserdata';
 
 @Module({
   imports: [
@@ -16,7 +17,7 @@ import { TokenGuard } from './guard/token.guard';
     CommonModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, TokenGuard],
-  exports: [AuthService, TokenGuard],
+  providers: [AuthService, TokenGuard, TokenAndUserData],
+  exports: [AuthService, TokenGuard, TokenAndUserData],
 })
 export class AuthModule {}

@@ -1,12 +1,12 @@
 import { CommentModel } from 'src/comment/entries/comment.entity';
 import { BaseUserModel } from 'src/user/entries/BaseUser.Entity';
-import { RoleEnum } from 'type/auth';
+import { USER_ROLE } from 'type/auth';
 import { Column, Entity, OneToMany } from 'typeorm';
 
 @Entity('admin')
 export class AdminModel extends BaseUserModel {
-  @Column({ enum: [RoleEnum.ADMIN], default: RoleEnum.ADMIN })
-  role: RoleEnum.ADMIN;
+  @Column({ enum: [USER_ROLE.ADMIN], default: USER_ROLE.ADMIN })
+  role: USER_ROLE.ADMIN;
 
   //댓글
   @OneToMany(() => CommentModel, (comment) => comment.user)

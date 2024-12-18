@@ -10,7 +10,7 @@ import { TemplateService } from '../template.service';
 @Injectable()
 export class TemplateEditGuard implements CanActivate {
   constructor(
-    private readonly tokenGuard: TokenGuard, // 관례상 camelCase로
+    private readonly tokenGuard: TokenGuard,
     private readonly templateService: TemplateService,
   ) {}
 
@@ -21,11 +21,8 @@ export class TemplateEditGuard implements CanActivate {
 
     if (type === 'edit') {
       try {
-        const isTokenValid = await this.tokenGuard.canActivate(context);
-
-        if (!isTokenValid) {
-          throw new UnauthorizedException('유효하지 않은 토큰입니다');
-        }
+        // Token Guard
+        await this.tokenGuard.canActivate(context);
 
         const template = await this.templateService.existTemplate(id);
 

@@ -7,13 +7,13 @@ import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BoardmetaModel } from './entries/BoardmetaModel';
 import { UserModel } from 'src/user/entries/user.entity';
-import { BoardModel } from './entries/BoardModel';
+import { BoardContentsModel } from './entries/BoardContentsModel';
 
 @Module({
   controllers: [BoardController],
   providers: [BoardService],
   imports: [
-    TypeOrmModule.forFeature([BoardmetaModel, BoardModel, UserModel]),
+    TypeOrmModule.forFeature([BoardmetaModel, BoardContentsModel, UserModel]),
     JwtModule.register({}),
     AuthModule,
     UserModule,
