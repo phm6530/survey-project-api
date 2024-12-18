@@ -7,11 +7,17 @@ import { RefreshTokenModel } from 'src/auth/entries/refreshToken.entity';
 import { UserModel } from 'src/user/entries/user.entity';
 import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
 import { TemplateModule } from 'src/template/template.module';
+import { BoardmetaModel } from 'src/board/entries/BoardmetaModel';
 
 @Module({
   imports: [
     JwtModule.register({}),
-    TypeOrmModule.forFeature([UserModel, RefreshTokenModel, TemplateMetaModel]),
+    TypeOrmModule.forFeature([
+      UserModel,
+      RefreshTokenModel,
+      TemplateMetaModel,
+      BoardmetaModel,
+    ]),
     TemplateModule,
   ],
   exports: [UserService],

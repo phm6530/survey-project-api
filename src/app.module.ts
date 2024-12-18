@@ -25,8 +25,11 @@ import { AdminModel } from 'src/user/entries/admin.entity';
 import { ReplyModule } from './reply/reply.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { RefreshTokenModel } from 'src/auth/entries/refreshToken.entity';
+import { BoardModule } from './board/board.module';
+import { BoardmetaModel } from './board/entries/BoardmetaModel';
 
 const auth = [RefreshTokenModel];
+const board = [BoardmetaModel, BoardModule];
 
 @Module({
   imports: [
@@ -59,8 +62,9 @@ const auth = [RefreshTokenModel];
         ReplyModel,
         AdminModel,
         ...auth,
+        ...board,
       ],
-      synchronize: true,
+      synchronize: process.env.NODE_ENV === 'development',
     }),
     AuthModule,
     CommonModule,
@@ -69,6 +73,7 @@ const auth = [RefreshTokenModel];
     AnswerModule,
     CommentModule,
     ReplyModule,
+    BoardModule,
   ],
   controllers: [AppController],
   providers: [

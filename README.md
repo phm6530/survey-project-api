@@ -10,7 +10,7 @@ npm i @nestjs/jwt
 npm install @supabase/supabase-js
 ```
 
-
 ```bash
-
+# CLI 설치
+npx @nestjs/cli g resource
 ```

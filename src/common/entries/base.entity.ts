@@ -11,10 +11,10 @@ export abstract class BaseModel {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn() // 자동업데이트
   @Exclude({ toPlainOnly: true })
   updateAt: Date;
 
-  @CreateDateColumn()
+  @CreateDateColumn() // 생성때만 업데이트
   createAt: Date;
 }

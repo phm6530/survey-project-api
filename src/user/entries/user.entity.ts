@@ -1,6 +1,7 @@
 import { Exclude } from 'class-transformer';
 import { IsEmail, IsString, Length } from 'class-validator';
 import { RefreshTokenModel } from 'src/auth/entries/refreshToken.entity';
+import { BoardmetaModel } from 'src/board/entries/BoardmetaModel';
 import { CommentModel } from 'src/comment/entries/comment.entity';
 import { BaseModel } from 'src/common/entries/base.entity';
 import { ReplyModel } from 'src/reply/entries/reply.entity';
@@ -46,4 +47,8 @@ export class UserModel extends BaseModel {
     nullable: true,
   })
   comments?: CommentModel[];
+
+  // 게시물
+  @OneToMany(() => BoardmetaModel, (board) => board.user)
+  boards?: BoardmetaModel[];
 }

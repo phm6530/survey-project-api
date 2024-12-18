@@ -153,8 +153,9 @@ export class TemplateService {
       },
       relations: ['creator'],
     });
+
     if (!existsTemplate) {
-      throw new BadRequestException('없는페이지 요청입니다.');
+      throw new NotFoundException('없는페이지 요청입니다.');
     } else {
       return existsTemplate;
     }

@@ -45,7 +45,7 @@ export class TemplateController {
   async getList(@Query() query?: { sort?: TEMPLATERLIST_SORT; page?: number }) {
     return await this.templateService.getList({
       sort: query.sort,
-      page: +query.page,
+      page: +query.page || 1,
     });
   }
 
@@ -140,10 +140,7 @@ export class TemplateController {
     const { template, id } = params;
 
     // Template있는지 검사부터
-    // const test = await this.templateService.existTemplate(params.id);
-    // if (test.creator.email !== req.user.email) {
-    //   return new UnauthorizedException('에러');
-    // }
+    await this.templateService.existTemplate(id);
 
     // Template 전달
     return this.templateService.getTemplateById(template, id);

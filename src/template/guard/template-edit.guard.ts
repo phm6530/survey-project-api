@@ -28,6 +28,7 @@ export class TemplateEditGuard implements CanActivate {
         }
 
         const template = await this.templateService.existTemplate(id);
+
         if (template.creator.email !== req.user.email) {
           throw new UnauthorizedException('템플릿에 대한 접근 권한이 없습니다');
         }
