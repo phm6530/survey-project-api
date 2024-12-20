@@ -8,6 +8,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { BoardmetaModel } from './entries/BoardmetaModel';
 import { UserModel } from 'src/user/entries/user.entity';
 import { BoardContentsModel } from './entries/BoardContentsModel';
+import { CommonModule } from 'src/common/common.module';
 
 @Module({
   controllers: [BoardController],
@@ -17,6 +18,7 @@ import { BoardContentsModel } from './entries/BoardContentsModel';
     JwtModule.register({}),
     AuthModule,
     UserModule,
+    CommonModule,
   ],
 })
 export class BoardModule {}

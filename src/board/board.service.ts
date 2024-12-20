@@ -16,6 +16,16 @@ import { BoardCategory } from './board.controller';
 import { instanceToPlain } from 'class-transformer';
 import { AuthService } from 'src/auth/auth.service';
 import { UserModel } from 'src/user/entries/user.entity';
+import { CommonService } from 'src/common/common.service';
+
+const TargetType = {
+  TEMPLATE: 'template',
+  BOARD: 'board',
+  POST: 'post',
+  EVENT: 'event',
+} as const;
+
+type TargetUnion = (typeof TargetType)[keyof typeof TargetType];
 
 @Injectable()
 export class BoardService {
@@ -25,7 +35,44 @@ export class BoardService {
     @InjectRepository(BoardContentsModel)
     private readonly boardContentsRepository: Repository<BoardContentsModel>,
     private readonly authService: AuthService,
+    private readonly commonService: CommonService,
   ) {}
+
+  // 유저
+  private getCreatorInfo = (anonymous?: string, user?: UserModel) => {
+    if (!user) {
+      return {
+        role: USER_ROLE.ANONYMOUS,
+        nickname: anonymous,
+      };
+    }
+    return {
+      role: user.role,
+      nickname: user.nickname,
+    };
+  };
+
+  private transformBoardItem = (item: BoardmetaModel) => {
+    const { anonymous, user, createAt, updateAt, contents, ...rest } = item;
+
+    return {
+      ...rest,
+      createAt: this.commonService.transformTimeformat(createAt),
+      updateAt: this.commonService.transformTimeformat(updateAt),
+      creator: {
+        ...this.getCreatorInfo(anonymous, user),
+      },
+      ...(contents && { contents: contents.contents }),
+    };
+  };
+
+  async validateTarget(argType: TargetUnion, targetId: number) {
+    if (!Object.values(TargetType).includes(argType)) {
+      throw new BadRequestException(
+        `Target of type ${argType} with ID ${targetId} does not exist`,
+      );
+    }
+  }
 
   // list
   async getList(category: BoardCategory) {
@@ -39,32 +86,7 @@ export class BoardService {
       relations: ['user'],
     });
 
-    const creatorInital = (anonymous?: string, user?: UserModel) => {
-      if (!user) {
-        return {
-          role: USER_ROLE.ANONYMOUS,
-          nickname: anonymous,
-        };
-      }
-
-      return {
-        role: user.role,
-        nickname: user.nickname,
-      };
-    };
-
-    const newList = getBoardList.map((item) => {
-      const { anonymous, password: _, user, ...rest } = item;
-
-      return {
-        ...rest,
-        creator: {
-          ...creatorInital(anonymous, user),
-        },
-      };
-    });
-
-    console.log(newList);
+    const newList = getBoardList.map((item) => this.transformBoardItem(item));
 
     return instanceToPlain(newList);
   }
@@ -92,23 +114,16 @@ export class BoardService {
   }) {
     const isExistPost = await this.boardMetaRepository.findOne({
       where: {
+        category,
         id: postId,
       },
+      relations: ['contents', 'user'],
     });
 
     if (!isExistPost) {
       throw new NotFoundException('이미 삭제되었거나 잘못된 요청입니다.');
     }
-
-    const result = await this.boardMetaRepository.find({
-      where: {
-        category,
-        id: postId,
-      },
-      relations: ['user', 'contents'],
-    });
-
-    return instanceToPlain(result);
+    return instanceToPlain(this.transformBoardItem(isExistPost));
   }
 
   //Delete
@@ -211,8 +226,6 @@ export class BoardService {
       category,
       ...(await this.getAnonymousFields(role, { anonymous, password })),
     });
-
-    console.log('metaEntity???', metaEntity);
 
     const result = await boardMetaRepository.save(metaEntity);
 

@@ -3,11 +3,12 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createClient } from '@supabase/supabase-js';
-import * as dayjs from 'dayjs';
+
 import { extname } from 'path';
 import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
 import { QueryRunner, Repository } from 'typeorm';
 import { v4 as uuid4 } from 'uuid';
+import dayjs from '../../util/dayjs.util';
 
 @Injectable()
 export class CommonService {
@@ -90,8 +91,11 @@ export class CommonService {
     return listDataCnt > curPageCnt.length + offset;
   }
 
-  transformTimeformat(date: Date, format: string = 'YYYY-MM-DD HH:mm:ss') {
-    return dayjs(date).format(format);
+  transformTimeformat(
+    date: string | Date,
+    format: string = 'YYYY-MM-DD HH:mm:ss',
+  ) {
+    return dayjs(date).utc(true).tz('Asia/Seoul').format(format);
   }
 
   parseTime(time: string | number): number {

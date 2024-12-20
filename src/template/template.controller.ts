@@ -111,10 +111,10 @@ export class TemplateController {
 
     // 존재하면..
     if (existsTemplate) {
-      const { questions, ...rest } = body;
+      const { questions: _, ...rest } = body;
 
       const patchTemplate = await transaction.execute(async (qr) => {
-        const meta = await this.templateService.createTemplateMeta(
+        await this.templateService.createTemplateMeta(
           { ...rest },
           qr,
           existsTemplate,
