@@ -49,6 +49,7 @@ export class BoardService {
     return {
       role: user.role,
       nickname: user.nickname,
+      email: user.email,
     };
   };
 

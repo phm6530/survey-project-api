@@ -1,5 +1,6 @@
 import { instanceToPlain } from 'class-transformer';
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -24,6 +25,8 @@ import { ENV_KEYS } from 'config/jwt.config';
 import { JwtService } from '@nestjs/jwt';
 import { TokenGuard } from './guard/token.guard';
 import { JwtPayload } from './type/jwt';
+import { FindUserDto } from './dto/user-exist.dto';
+import { EmailSerivce } from 'src/common/service/email.service';
 
 @Controller('auth')
 export class AuthController {
@@ -33,6 +36,7 @@ export class AuthController {
     private readonly commonService: CommonService,
     private readonly configService: ConfigService,
     private readonly JwtService: JwtService,
+    private readonly EmailService: EmailSerivce,
   ) {}
   /**
    * + 비밀번호 변경
@@ -108,5 +112,36 @@ export class AuthController {
   CheckAuth(@Req() req: { user: JwtPayload }) {
     console.log('체크함?');
     return true;
+  }
+
+  // Post
+  @Post('/password/forgot')
+  async forgetPassword(@Body() body: FindUserDto) {
+    // 유저 있나 확인
+    const IsExistUser = await this.authService.isExistUser({
+      email: body.email,
+    });
+
+    if (!IsExistUser) {
+      throw new BadRequestException('등록된 회원 정보가 없습니다.');
+    }
+    const pin = this.commonService.addPin(4);
+
+    const HTML = `
+        <h1>문의사항</h1>
+        <br><br>
+        안녕하세요 ${IsExistUser.nickname}
+        핀번호 ${pin}
+        <br>
+      <p style="font-size:12px; opacity : .7;">
+    `;
+
+    await this.EmailService.sendEmail(IsExistUser.email, '문의 발송', HTML);
+
+    return {
+      statusCode: 200,
+      menber: true,
+      authPin: pin,
+    };
   }
 }

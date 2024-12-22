@@ -12,8 +12,8 @@ export class BoardGuard implements CanActivate {
   async canActivate(context: ExecutionContext) {
     const req = context.switchToHttp().getRequest();
 
-    const { anonymous, password } = req.body;
-    const isAnonymous = anonymous && password;
+    const { password } = req.body;
+    const isAnonymous = password;
 
     const token = this.TokenAndUserData.extractToken(req);
 

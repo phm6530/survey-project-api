@@ -18,7 +18,15 @@ export class CommonService {
     private readonly configService: ConfigService,
   ) {}
 
-  getRepository(qr?: QueryRunner) {
+  public addPin(length: number) {
+    //거듭제곱으로 길이 계산
+    const startNum = Math.pow(10, length - 1);
+    const endNum = Math.pow(10, length) - 1;
+
+    return Math.floor(startNum + Math.random() * (endNum - startNum + 1));
+  }
+
+  public getRepository(qr?: QueryRunner) {
     return qr
       ? qr.manager.getRepository<TemplateMetaModel>(TemplateMetaModel)
       : this.templatemetaRepository;

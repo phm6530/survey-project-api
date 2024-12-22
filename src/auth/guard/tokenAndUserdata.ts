@@ -17,7 +17,7 @@ export class TokenAndUserData implements CanActivate {
     private readonly configService: ConfigService,
   ) {}
 
-  extractToken(req: any): string | null {
+  public extractToken(req: any): string | null {
     const authHeader = req.headers['authorization'];
     const headerToken = authHeader?.split(' ')[1];
     const cookieToken = req.cookies['token'];

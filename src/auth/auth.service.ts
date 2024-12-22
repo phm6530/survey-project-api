@@ -30,6 +30,18 @@ export class AuthService {
     private readonly commonService: CommonService,
   ) {}
 
+  //User Find
+  async isExistUser({ email, nickname }: { email: string; nickname?: string }) {
+    const queryBuilder = this.userModelRepository
+      .createQueryBuilder('user')
+      .where('user.email = :email', { email });
+
+    if (nickname) {
+      queryBuilder.orWhere('user.nickname = :nickname', { nickname });
+    }
+    return await queryBuilder.getOne();
+  }
+
   //password Hash
   async hashTransformPassword(password: string) {
     //salt
@@ -70,13 +82,9 @@ export class AuthService {
   ) {
     const userRepository = qr.manager.getRepository<UserModel>(UserModel);
 
-    const isExsitEmailorNickname = await userRepository
-      .createQueryBuilder('user')
-      .where('user.email = :email', { email })
-      .orWhere('user.nickname = :nickname', { nickname })
-      .getOne();
+    const user = await this.isExistUser({ email });
 
-    if (!!isExsitEmailorNickname)
+    if (!!user)
       throw new BadRequestException('이미 존재하는 닉네임이거나 email 입니다.');
 
     //비밀번호 해쉬화 시키고
@@ -96,9 +104,7 @@ export class AuthService {
 
   async loginUser({ email, password }: SignInDto) {
     //존재하는유저인지 찾기
-    const isExistUser = await this.userModelRepository.findOne({
-      where: { email },
-    });
+    const isExistUser = await this.isExistUser({ email });
 
     if (!isExistUser) {
       throw new BadRequestException(

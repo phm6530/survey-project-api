@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
 import { MulterModule } from '@nestjs/platform-express';
 import { extname } from 'path';
+import { EmailSerivce } from './service/email.service';
 
 @Module({
   imports: [
@@ -31,7 +32,7 @@ import { extname } from 'path';
     TypeOrmModule.forFeature([TemplateMetaModel]),
   ],
   controllers: [CommonController],
-  providers: [CommonService],
-  exports: [CommonService],
+  providers: [CommonService, EmailSerivce],
+  exports: [CommonService, EmailSerivce],
 })
 export class CommonModule {}

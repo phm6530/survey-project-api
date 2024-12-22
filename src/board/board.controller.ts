@@ -90,6 +90,7 @@ export class BoardController {
   ) {
     const { category, id } = params;
 
+    console.log('삭제요청..');
     if (
       !Object.values(BOARD_CATEGORY).includes(category) ||
       isNaN(parseInt(id, 10))
