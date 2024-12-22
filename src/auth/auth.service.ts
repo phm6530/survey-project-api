@@ -52,9 +52,13 @@ export class AuthService {
   }
 
   //password 검증
-  async verifyPassword(inputPassword: string, storedHashedPassword: string) {
+  async verifyPassword(
+    inputPassword: string,
+    storedHashedPassword: string,
+    throwError: boolean = true,
+  ): Promise<boolean> {
     const isVerify = await bcrypt.compare(inputPassword, storedHashedPassword);
-    if (!isVerify) {
+    if (!isVerify && throwError) {
       throw new ForbiddenException('비밀번호가 일치하지 않습니다.');
     }
     return isVerify;
@@ -73,6 +77,14 @@ export class AuthService {
         error.message || '유효한 토큰이 아닙니다.',
       );
     }
+  }
+
+  async updatePassword(userEmail: string, newPassword: string) {
+    const hashPassword = await this.hashTransformPassword(newPassword);
+    return await this.userModelRepository.update(
+      { email: userEmail },
+      { password: hashPassword },
+    );
   }
 
   //회원가입
@@ -102,8 +114,7 @@ export class AuthService {
     return instanceToPlain(saveduser);
   }
 
-  async loginUser({ email, password }: SignInDto) {
-    //존재하는유저인지 찾기
+  async existUser({ email }) {
     const isExistUser = await this.isExistUser({ email });
 
     if (!isExistUser) {
@@ -111,6 +122,13 @@ export class AuthService {
         '없는 사용자거나 패스워드가 일치하지않습니다.',
       );
     }
+
+    return isExistUser;
+  }
+
+  async loginUser({ email, password }: SignInDto) {
+    //존재하는유저인지 찾기
+    const isExistUser = await this.existUser({ email });
     const verfiy = await this.verifyPassword(password, isExistUser.password);
 
     if (!verfiy) {

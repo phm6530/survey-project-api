@@ -6,7 +6,6 @@ import {
   Get,
   Patch,
   Post,
-  Req,
   Request,
   Res,
   UseGuards,
@@ -23,10 +22,10 @@ import { CommonService } from 'src/common/common.service';
 import { ConfigService } from '@nestjs/config';
 import { ENV_KEYS } from 'config/jwt.config';
 import { JwtService } from '@nestjs/jwt';
-import { TokenGuard } from './guard/token.guard';
-import { JwtPayload } from './type/jwt';
+
 import { FindUserDto } from './dto/user-exist.dto';
 import { EmailSerivce } from 'src/common/service/email.service';
+import { PasswordResetDto } from './dto/password-reset.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -92,28 +91,11 @@ export class AuthController {
   @Get('/accesstoken')
   @UseGuards(UserInTokenGuard)
   async refreshAccessToken(@Request() req: any) {
-    console.log('AccessToken 발급');
-
     const { id } = req.user as UserModel;
     const refreshAccessToken = await this.authService.createAccessToken(id);
-    // //엑세스 10분
-    // res.cookie('accessToken', refreshAccessToken, {
-    //   httpOnly: false,
-    //   secure: false, //https 여부
-    //   maxAge: 60 * 60 * 1000, // 60분 테스트
-    //   path: '/',
-    // });
 
     return { message: 'accessToken Refresh', refreshAccessToken };
   }
-
-  @Get('verify')
-  @UseGuards(TokenGuard)
-  CheckAuth(@Req() req: { user: JwtPayload }) {
-    console.log('체크함?');
-    return true;
-  }
-
   // Post
   @Post('/password/forgot')
   async forgetPassword(@Body() body: FindUserDto) {
@@ -141,7 +123,31 @@ export class AuthController {
     return {
       statusCode: 200,
       menber: true,
+      userEmail: IsExistUser.email,
       authPin: pin,
+    };
+  }
+
+  @Post('/password/reset')
+  async resetPassword(@Body() body: PasswordResetDto) {
+    const { userEmail, resetPassword } = body;
+    const isExistUser = await this.authService.existUser({ email: userEmail });
+
+    //이전 비밀번호가 일치하는지?
+    const comparePassword = await this.authService.verifyPassword(
+      resetPassword,
+      isExistUser.password,
+      false,
+    );
+
+    //이전 일치하면 에러
+    if (comparePassword) {
+      throw new BadRequestException('현재 비밀번호와 일치합니다.');
+    }
+    await this.authService.updatePassword(userEmail, resetPassword);
+
+    return {
+      statusCode: 200,
     };
   }
 }
