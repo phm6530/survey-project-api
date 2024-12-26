@@ -3,7 +3,8 @@ import { AnswerService } from './answer.service';
 import { withTransaction } from 'lib/withTransaction.lib';
 import { DataSource, QueryRunner } from 'typeorm';
 import { CreateAnswerDto } from 'src/answer/dto/CreateAnswer.dto';
-import { TEMPLATE_TYPE } from 'type/template';
+import { GENDER_GROUP, TEMPLATE_TYPE } from 'type/template';
+import { AgeGroup, GenderGrop } from './entries/respondent.entity';
 
 export type AnswerPostParams = {
   template: TEMPLATE_TYPE;
@@ -47,13 +48,21 @@ export class AnswerController {
     return result;
   }
 
-  @Get('/question/:id/:page')
-  async getTextAnswerPage(@Param() params: { id: string; page: string }) {
+  @Post('/question/:id/:page')
+  async getTextAnswerPage(
+    @Body()
+    body: { genderGroup: GENDER_GROUP | 'all'; ageGroup: AgeGroup | 'all' },
+    @Param() params: { id: string; page: string },
+  ) {
     const { id, page } = params;
 
     const [answers, isNextPage] = await this.answerService.getTextAnswer(
       +id,
       +page,
+      {
+        AgeGroup: body.ageGroup,
+        GenderGroup: body.genderGroup,
+      },
     );
 
     return {

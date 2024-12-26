@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { instanceToPlain } from 'class-transformer';
 import { AuthService } from 'src/auth/auth.service';
@@ -9,8 +13,14 @@ import { CommonService } from 'src/common/common.service';
 import { UserModel } from 'src/user/entries/user.entity';
 
 import { UserService } from 'src/user/user.service';
-import { paramsTemplateAndId } from 'type/template';
+import { USER_ROLE } from 'type/auth';
+import { paramsTypeAndId } from 'type/template';
 import { QueryRunner, Repository } from 'typeorm';
+
+export enum COMMENT_NEED_PATH {
+  TEMPLATE = 'template',
+  BOARD = 'board',
+}
 
 @Injectable()
 export class CommentService {
@@ -22,22 +32,57 @@ export class CommentService {
     private readonly UserService: UserService,
   ) {}
 
-  //댓글 리스트 가져오기
-  async getcommentList({ id, template }: paramsTemplateAndId) {
-    const isExistTemplate = await this.commonService.isExistTemplate({
-      id: id,
-      templateType: template,
-    });
+  private getCreatorInfo = (anonymous?: string, user?: any) => {
+    if (!(user?.role === USER_ROLE.ADMIN || user?.role === USER_ROLE.USER)) {
+      return {
+        role: USER_ROLE.ANONYMOUS,
+        nickname: anonymous,
+      };
+    }
+    return {
+      role: user.role,
+      nickname: user.nickname,
+      email: user.email,
+    };
+  };
 
-    const comments = this.commentRepository
+  public async deleteRelationComment(
+    {
+      parentId,
+      parentType,
+    }: { parentId: number; parentType: COMMENT_NEED_PATH },
+    qr?: QueryRunner,
+  ): Promise<void> {
+    // 트랜잭션 유무 처리
+    const repo = qr
+      ? qr.manager.getRepository<CommentModel>(CommentModel)
+      : this.commentRepository;
+
+    try {
+      // 관련 댓글 삭제
+      await repo.delete({ parentId, parentType });
+    } catch (error) {
+      console.log(error);
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  //댓글 리스트 가져오기
+  async getcommentList({ parentType, parentId }: paramsTypeAndId) {
+    // await this.commonService.isExistTemplate({
+    //   id: parentId,
+    // });
+
+    const comments = await this.commentRepository
       .createQueryBuilder('comment')
       .leftJoinAndSelect('comment.replies', 'replies')
       .leftJoinAndSelect('comment.user', 'wirteUser')
       .leftJoinAndSelect('replies.user', 'replywirteUser')
 
-      .where('comment.templateId = :templateId', {
-        templateId: isExistTemplate.id,
+      .where('comment.parentId = :parentId', {
+        parentId,
       })
+      .andWhere('comment.parentType =:parentType', { parentType })
       .addSelect('wirteUser.id') // comment 유저
       .addSelect('replywirteUser.id')
 
@@ -46,32 +91,44 @@ export class CommentService {
 
       .getMany();
 
-    return instanceToPlain(comments);
+    const resultDatas = comments.map((e) => {
+      return {
+        ...e,
+        createAt: this.commonService.transformTimeformat(e.createAt),
+        replies: e.replies.map((reply) => {
+          return {
+            ...reply,
+            createAt: this.commonService.transformTimeformat(reply.createAt),
+            creator: { ...this.getCreatorInfo(reply.anonymous, reply.user) },
+          };
+        }),
+        creator: {
+          ...this.getCreatorInfo(e.anonymous, e.user),
+        },
+      };
+    });
+
+    return instanceToPlain(resultDatas);
   }
 
   //댓글 생성
   async createComment(
-    params: paramsTemplateAndId,
+    params: paramsTypeAndId,
     body: CreateCommentDto,
     qr: QueryRunner,
   ) {
     //익명으로 댓글을 남길때는 꼭 anonymous 체크하기
     const { userId, content, password, anonymous } = body;
-    const template = await this.commonService.isExistTemplate(
-      { id: params.id, templateType: params.template },
-      qr,
-    );
 
     //유저면 user Entity 없으면 Null
     const user = userId
       ? await this.UserService.getUser({ id: +userId })
       : null;
 
-    // const { userId: id, comment } = body;
-
     const repository = qr.manager.getRepository<CommentModel>(CommentModel);
     const entity = repository.create({
-      template: { id: template.id },
+      parentId: params.parentId,
+      parentType: params.parentType,
       content,
       user,
       anonymous: !user ? anonymous : null,
@@ -80,7 +137,7 @@ export class CommentService {
         : null,
     });
 
-    //패스워드 직렬화 제거
+    // //패스워드 직렬화 제거
     return instanceToPlain(await repository.save(entity));
   }
 

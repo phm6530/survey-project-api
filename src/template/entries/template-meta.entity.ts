@@ -1,5 +1,4 @@
 import { RespondentModel } from 'src/answer/entries/respondent.entity';
-import { CommentModel } from 'src/comment/entries/comment.entity';
 import { BaseModel } from 'src/common/entries/base.entity';
 import { SurveyQuestion } from 'src/template/entries/survey/survey-questions.entity';
 import { UserModel } from 'src/user/entries/user.entity';
@@ -43,8 +42,8 @@ export class TemplateMetaModel extends BaseModel {
   respondents: RespondentModel[];
 
   //템플릿에 대한 댓글
-  @OneToMany(() => CommentModel, (comment) => comment.template)
-  comments: CommentModel[];
+  // @OneToMany(() => CommentModel, (comment) => comment.template)
+  // comments: CommentModel[];
 
   //생성한유저
   @ManyToOne(() => UserModel, (user) => user.templates)

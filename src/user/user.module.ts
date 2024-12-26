@@ -8,6 +8,7 @@ import { UserModel } from 'src/user/entries/user.entity';
 import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
 import { TemplateModule } from 'src/template/template.module';
 import { BoardmetaModel } from 'src/board/entries/BoardmetaModel';
+import { CommonModule } from 'src/common/common.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { BoardmetaModel } from 'src/board/entries/BoardmetaModel';
       BoardmetaModel,
     ]),
     TemplateModule,
+    CommonModule,
   ],
   exports: [UserService],
   controllers: [UserController],

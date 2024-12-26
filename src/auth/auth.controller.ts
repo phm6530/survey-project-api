@@ -26,6 +26,7 @@ import { JwtService } from '@nestjs/jwt';
 import { FindUserDto } from './dto/user-exist.dto';
 import { EmailSerivce } from 'src/common/service/email.service';
 import { PasswordResetDto } from './dto/password-reset.dto';
+import { TokenGuard } from './guard/token.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -149,5 +150,11 @@ export class AuthController {
     return {
       statusCode: 200,
     };
+  }
+
+  @Get('verify')
+  @UseGuards(TokenGuard)
+  CheckAuth() {
+    return true;
   }
 }

@@ -8,7 +8,10 @@ import { AnswerPostParams } from 'src/answer/answer.controller';
 
 import { CreateAnswerDto } from 'src/answer/dto/CreateAnswer.dto';
 import { AnswerModel } from 'src/answer/entries/responseSelect.entity';
-import { RespondentModel } from 'src/answer/entries/respondent.entity';
+import {
+  AgeGroup,
+  RespondentModel,
+} from 'src/answer/entries/respondent.entity';
 import { QustionOption } from 'src/template/entries/survey/survey-option.entity';
 import {
   QuestionTypes,
@@ -19,6 +22,7 @@ import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
 import { In, QueryRunner, Repository } from 'typeorm';
 import { responseText } from 'src/answer/entries/responseText.entity';
 import { respondentsGroup } from 'util/respondentsFilter.util';
+import { GENDER_GROUP } from 'type/template';
 
 @Injectable()
 export class AnswerService {
@@ -140,6 +144,7 @@ export class AnswerService {
       .createQueryBuilder('template')
       .leftJoinAndSelect('template.respondents', 'respondents')
       .leftJoinAndSelect('template.questions', 'questions')
+      .leftJoinAndSelect('template.creator', 'creator')
 
       .leftJoinAndSelect('questions.textAnswers', 'textAnswers')
       .leftJoinAndSelect('textAnswers.respondent', 'respondent')
@@ -204,28 +209,65 @@ export class AnswerService {
 
     return {
       ...rest,
+      creator: {
+        nickname: data.creator.nickname,
+        role: data.creator.role,
+        email: data.creator.email,
+      },
       respondents: { allCnt: respondents.length, detail: respodentsGroupData },
       questions: newQuestions,
     };
   }
 
   // 10개씩
-  async getTextAnswer(id: number, page: number = 1) {
+  async getTextAnswer(
+    id: number,
+    page: number = 1,
+    filters: {
+      AgeGroup?: AgeGroup | 'all';
+      GenderGroup?: GENDER_GROUP | 'all';
+    } = {},
+  ) {
     const limit = 10;
 
-    const [Answers, totalCnt] =
-      await this.TextAnwersRepositorys.createQueryBuilder('textAnswers')
-        .leftJoinAndSelect('textAnswers.respondent', 'respondent')
-        .where('textAnswers.questionId = :questionId', {
-          questionId: id,
-        })
-        .orderBy('textAnswers.id', 'DESC')
-        .addOrderBy('respondent.id', 'DESC')
-        .skip((page - 1) * limit)
-        .take(limit)
-        .getManyAndCount();
+    console.count('gma');
+
+    const queryBuilder = this.TextAnwersRepositorys.createQueryBuilder(
+      'textAnswers',
+    )
+      .leftJoinAndSelect('textAnswers.respondent', 'respondent')
+      .where('textAnswers.questionId = :questionId', {
+        questionId: id,
+      });
+
+    // 성별 필터 조건
+    if (
+      filters.GenderGroup &&
+      (filters.GenderGroup === GENDER_GROUP.FEMALE ||
+        filters.GenderGroup === GENDER_GROUP.MALE)
+    ) {
+      queryBuilder.andWhere('respondent.gender = :gender', {
+        gender: filters.GenderGroup,
+      });
+    }
+
+    // 나이 필터 조건
+    if (filters.AgeGroup && filters.AgeGroup !== 'all') {
+      queryBuilder.andWhere('respondent.age = :age', {
+        age: filters.AgeGroup,
+      });
+    }
+
+    const [Answers, totalCnt] = await queryBuilder
+      .orderBy('textAnswers.id', 'DESC')
+      .addOrderBy('respondent.id', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
+
     const nextPage =
       totalCnt > Answers.length + (page - 1) * limit ? page + 1 : null;
+
     return [Answers, nextPage];
   }
 }

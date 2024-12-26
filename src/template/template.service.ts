@@ -33,6 +33,10 @@ export type DetailRespondents = {
 export type RespondentsAndMaxGroup = {
   tag: RESPONDENT_TAG.MAXGROUP;
   allCnt: number;
+  participants: {
+    male: number;
+    female: number;
+  };
   maxGroup: {
     maxCnt: number;
     genderGroup?: GENDER_GROUP;
@@ -98,6 +102,10 @@ interface TemplateResult {
   nickname: string;
   email: string;
   role: string;
+
+  // 남녀
+  female_participants: string;
+  male_participants: string;
 
   // 통계 정보
   max_age_group: number;
@@ -210,44 +218,49 @@ export class TemplateService {
     Pick<UserModel, 'id'>
   >) {
     let sql = `
-        WITH AgeGenderCounts AS (
+            WITH AgeGenderCounts AS (
+                SELECT 
+                    rm."templateId",
+                    rm.age,
+                    rm.gender,
+                    COUNT(*) AS count
+                FROM respondent_model AS rm
+                GROUP BY rm."templateId", rm.age, rm.gender
+            ),
+            MaxAgeGender AS (
+                SELECT DISTINCT ON (rm."templateId")
+                    rm."templateId",
+                    rm.age,
+                    rm.gender,
+                    COUNT(*) AS count,
+                    RANK() OVER (PARTITION BY rm."templateId" ORDER BY COUNT(*) DESC) AS rank
+                FROM respondent_model AS rm
+                GROUP BY rm."templateId", rm.age, rm.gender
+            ),
+            TemplateRespondentCounts AS (
+                SELECT 
+                    rm."templateId",
+                    COUNT(*) AS total_respondents,
+                    COUNT(CASE WHEN rm.gender = 'female' THEN 1 END) AS female_count,
+                    COUNT(CASE WHEN rm.gender = 'male' THEN 1 END) AS male_count
+                FROM respondent_model AS rm
+                GROUP BY rm."templateId"
+            )
             SELECT 
-              rm."templateId",
-              rm.age,
-              rm.gender,
-              COUNT(*) AS count
-            FROM respondent_model AS rm
-            GROUP BY rm."templateId", rm.age, rm.gender
-          ),
-          MaxAgeGender AS (
-            SELECT DISTINCT ON ("templateId")
-              "templateId",
-              age,
-              gender,
-              count,
-              RANK() OVER (PARTITION BY "templateId" ORDER BY count DESC) AS rank
-            FROM AgeGenderCounts
-          ),
-          TemplateRespondentCounts AS (
-            SELECT 
-              rm."templateId",
-              COUNT(*) AS total_respondents
-            FROM respondent_model AS rm
-            GROUP BY rm."templateId"
-          )
-          SELECT 
-            tm.*,
-            u.nickname as nickname,
-            u.email as email,
-            u.role as role,
-            mag.age AS max_age_group,
-            mag.gender AS max_gender_group,
-            mag.count AS max_group_count,
-            trc.total_respondents as total
-          FROM template_metadata AS tm
-          LEFT JOIN users AS u ON tm."creatorId" = u.id
-          LEFT JOIN MaxAgeGender AS mag ON tm.id = mag."templateId" AND mag.rank = 1
-          LEFT JOIN TemplateRespondentCounts AS trc ON tm.id = trc."templateId"
+                tm.*,
+                u.nickname AS nickname,
+                u.email AS email,
+                u.role AS role,
+                mag.age AS max_age_group,
+                mag.gender AS max_gender_group,
+                mag.count AS max_group_count,
+                trc.total_respondents AS total,
+                trc.female_count AS female_participants,
+                trc.male_count AS male_participants
+            FROM template_metadata AS tm
+            LEFT JOIN users AS u ON tm."creatorId" = u.id
+            LEFT JOIN MaxAgeGender AS mag ON tm.id = mag."templateId" AND mag.rank = 1
+            LEFT JOIN TemplateRespondentCounts AS trc ON tm.id = trc."templateId"
           `;
 
     const LIMIT = 12; // 12
@@ -291,6 +304,8 @@ export class TemplateService {
 
     const resultArr = [] as TemplateItemMetadata<RespondentsAndMaxGroup>[];
 
+    console.log(result);
+
     result.forEach((row) => {
       resultArr.push({
         id: row.id,
@@ -305,6 +320,10 @@ export class TemplateService {
         respondents: {
           tag: RESPONDENT_TAG.MAXGROUP,
           allCnt: parseInt(row.total, 10),
+          participants: {
+            male: parseInt(row.male_participants, 10),
+            female: parseInt(row.female_participants, 10),
+          },
           maxGroup: {
             maxCnt: parseInt(row.max_group_count, 10),
             genderGroup: (row.max_gender_group as GENDER_GROUP) || null,
@@ -420,6 +439,10 @@ export class TemplateService {
         respondents: {
           tag: RESPONDENT_TAG.MAXGROUP,
           allCnt: parseInt(row.total, 10),
+          participants: {
+            male: parseInt(row.male_participants, 10),
+            female: parseInt(row.female_participants, 10),
+          },
           maxGroup: {
             maxCnt: parseInt(row.max_group_count, 10),
             genderGroup: (row.max_gender_group as GENDER_GROUP) || null,

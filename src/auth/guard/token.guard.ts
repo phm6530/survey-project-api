@@ -30,7 +30,7 @@ export class TokenGuard implements CanActivate {
       body: any,
     ): boolean => {
       return (
-        path.startsWith('/comment') &&
+        (path.startsWith('/comment') || path.startsWith('/reply')) &&
         method === 'POST' &&
         'anonymous' in body &&
         'password' in body &&
@@ -44,7 +44,9 @@ export class TokenGuard implements CanActivate {
       body: any,
     ): boolean => {
       return (
-        path.startsWith('/comment') && method === 'DELETE' && 'password' in body
+        (path.startsWith('/comment') || path.startsWith('/reply')) &&
+        method === 'DELETE' &&
+        'password' in body
       );
     };
 

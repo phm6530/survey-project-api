@@ -2,16 +2,16 @@ import { Exclude } from 'class-transformer';
 import { IsNotEmpty, IsOptional, IsString, ValidateIf } from 'class-validator';
 import { ReplyModel } from 'src/reply/entries/reply.entity';
 import { BaseModel } from 'src/common/entries/base.entity';
-import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
 import { UserModel } from 'src/user/entries/user.entity';
 import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 
 @Entity()
 export class CommentModel extends BaseModel {
-  @ManyToOne(() => TemplateMetaModel, (template) => template.comments, {
-    onDelete: 'CASCADE',
-  })
-  template: TemplateMetaModel;
+  @Column({ type: 'int', nullable: true })
+  parentId: number;
+
+  @Column({ type: 'varchar', nullable: true })
+  parentType: string; // e.g., 'template', 'board'
 
   // 댓글 작성자
   @ManyToOne(() => UserModel, (user) => user.comments, {

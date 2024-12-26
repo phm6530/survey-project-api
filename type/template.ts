@@ -3,9 +3,9 @@ export enum TEMPLATE_TYPE {
   RANK = 'rank',
 }
 
-export type paramsTemplateAndId = {
-  template: TEMPLATE_TYPE;
-  id: number;
+export type paramsTypeAndId = {
+  parentType: TEMPLATE_TYPE;
+  parentId: number;
 };
 export enum GENDER_GROUP {
   FEMALE = 'female',

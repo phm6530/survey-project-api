@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from 'src/comment/dto/createComment.dto';
-import { paramsTemplateAndId, TEMPLATE_TYPE } from 'type/template';
+import { paramsTypeAndId, TEMPLATE_TYPE } from 'type/template';
 import { withTransactions } from 'lib/withTransaction.lib';
 import { DataSource, QueryRunner } from 'typeorm';
 import { parseIntParam } from 'src/common/decorator/parseIntParam.decorator';
@@ -25,11 +25,11 @@ export class CommentController {
     private readonly dataSource: DataSource,
   ) {}
 
-  @Post('/:template/:id')
+  @Post('/:parentType/:parentId')
   @UseGuards(TokenGuard)
   // @UseInterceptors(UserIdToUserInterceptor)
   async postComment(
-    @Param() params: paramsTemplateAndId,
+    @Param() params: paramsTypeAndId,
     @Body() body: CreateCommentDto,
   ) {
     const transaction = new withTransactions(this.dataSource);
@@ -38,16 +38,15 @@ export class CommentController {
     });
   }
 
-  @Get('/:template/:id')
+  @Get('/:parentType/:parentId')
   async getCommentList(
-    @Param('template') templateType: TEMPLATE_TYPE,
-    @parseIntParam('id') id: number,
+    @Param('parentType') templateType: TEMPLATE_TYPE,
+    @parseIntParam('parentId') id: number,
   ) {
     const data = await this.commentService.getcommentList({
-      id,
-      template: templateType,
+      parentId: id,
+      parentType: templateType,
     });
-
     return data;
   }
 
@@ -58,6 +57,8 @@ export class CommentController {
     @Body() body: DeleteCommentDto,
     @User() user?: UserModel,
   ) {
+    console.log(body);
+
     return this.commentService.deleteCommentTarget(id, user, body.password);
   }
 }

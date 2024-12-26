@@ -1,6 +1,7 @@
 import { TemplateService } from './../template/template.service';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { CommonService } from 'src/common/common.service';
 import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
 import { UserModel } from 'src/user/entries/user.entity';
 import { Repository } from 'typeorm';
@@ -13,6 +14,7 @@ export class UserService {
     @InjectRepository(TemplateMetaModel)
     private readonly templateMetaRepository: Repository<TemplateMetaModel>,
     private readonly TemplateService: TemplateService,
+    private readonly commonService: CommonService,
   ) {}
   async getUser({
     id,
@@ -23,7 +25,12 @@ export class UserService {
       where: whereCondition,
     });
 
-    return userData;
+    const transformForamt = {
+      ...userData,
+      createAt: this.commonService.transformTimeformat(userData.createAt),
+    };
+
+    return transformForamt;
   }
 
   //내가 만든 템플릿 가져오기

@@ -28,4 +28,7 @@ export class BoardmetaModel extends BaseModel {
 
   @OneToOne(() => BoardContentsModel, (contents) => contents.boardMeta)
   contents: BoardContentsModel;
+
+  @Column({ default: 0 })
+  view: number;
 }

@@ -9,6 +9,7 @@ import { BoardmetaModel } from './entries/BoardmetaModel';
 import { UserModel } from 'src/user/entries/user.entity';
 import { BoardContentsModel } from './entries/BoardContentsModel';
 import { CommonModule } from 'src/common/common.module';
+import { CommentModule } from 'src/comment/comment.module';
 
 @Module({
   controllers: [BoardController],
@@ -19,6 +20,7 @@ import { CommonModule } from 'src/common/common.module';
     AuthModule,
     UserModule,
     CommonModule,
+    CommentModule,
   ],
 })
 export class BoardModule {}

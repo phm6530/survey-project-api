@@ -1,4 +1,3 @@
-import { TEMPLATE_TYPE } from './../../type/template';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -33,14 +32,12 @@ export class CommonService {
   }
 
   //template 존재여부
-  async isExistTemplate(
-    { id, templateType }: { id: number; templateType: TEMPLATE_TYPE },
-    qr?: QueryRunner,
-  ) {
+  public async isExistTemplate({ id }: { id: number }, qr?: QueryRunner) {
     const templateMeta = this.getRepository(qr);
     const template = await templateMeta.findOne({
-      where: { id, templateType: templateType },
+      where: { id },
     });
+    console.log(template);
 
     if (!template) {
       throw new NotFoundException('이미 삭제되었거나 잘못된 요청입니다.');
@@ -99,14 +96,14 @@ export class CommonService {
     return listDataCnt > curPageCnt.length + offset;
   }
 
-  transformTimeformat(
+  public transformTimeformat(
     date: string | Date,
     format: string = 'YYYY-MM-DD HH:mm:ss',
   ) {
     return dayjs(date).utc(true).tz('Asia/Seoul').format(format);
   }
 
-  parseTime(time: string | number): number {
+  public parseTime(time: string | number): number {
     if (typeof time === 'number') {
       return time; // 이미 초 단위라면 그대로 반환
     }
