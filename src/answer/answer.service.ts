@@ -158,17 +158,17 @@ export class AnswerService {
       .orderBy('questions.id', 'ASC')
       .getOne();
 
-    if (data && data.questions) {
-      const questions = data.questions;
+    // if (data && data.questions) {
+    //   const questions = data.questions;
 
-      for (const qs of questions) {
-        if (qs.type === QuestionTypes.TEXT) {
-          const [textAnswers, isNextPage] = await this.getTextAnswer(qs.id);
+    //   for (const qs of questions) {
+    //     if (qs.type === QuestionTypes.TEXT) {
+    //       const [textAnswers, isNextPage] = await this.getTextAnswer(qs.id);
 
-          qs.textAnswers = textAnswers as responseText[];
-        }
-      }
-    }
+    //       qs.textAnswers = textAnswers as responseText[];
+    //     }
+    //   }
+    // }
 
     if (!data) {
       throw new NotFoundException('이미 삭제되었거나 잘못된 요청입니다.');
@@ -230,8 +230,6 @@ export class AnswerService {
   ) {
     const limit = 10;
 
-    console.count('gma');
-
     const queryBuilder = this.TextAnwersRepositorys.createQueryBuilder(
       'textAnswers',
     )
@@ -264,6 +262,8 @@ export class AnswerService {
       .skip((page - 1) * limit)
       .take(limit)
       .getManyAndCount();
+
+    console.count('test');
 
     const nextPage =
       totalCnt > Answers.length + (page - 1) * limit ? page + 1 : null;
