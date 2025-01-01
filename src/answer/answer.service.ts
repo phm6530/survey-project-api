@@ -23,6 +23,7 @@ import { In, QueryRunner, Repository } from 'typeorm';
 import { responseText } from 'src/answer/entries/responseText.entity';
 import { respondentsGroup } from 'util/respondentsFilter.util';
 import { GENDER_GROUP } from 'type/template';
+import maxGroupData from 'util/maxGroup';
 
 @Injectable()
 export class AnswerService {
@@ -178,6 +179,7 @@ export class AnswerService {
 
     //O(n)
     const respodentsGroupData = respondentsGroup(respondents);
+    const maxGroup = maxGroupData(respodentsGroupData);
 
     //template
     const newQuestions = await Promise.all(
@@ -194,6 +196,7 @@ export class AnswerService {
               };
             });
             const responseGroupData = respondentsGroup(groupData);
+
             return { ...rest, response: responseGroupData };
           });
 
@@ -214,7 +217,10 @@ export class AnswerService {
         role: data.creator.role,
         email: data.creator.email,
       },
-      respondents: { allCnt: respondents.length, detail: respodentsGroupData },
+      respondents: {
+        allCnt: respondents.length,
+        detail: { ...respodentsGroupData, maxGroup },
+      },
       questions: newQuestions,
     };
   }

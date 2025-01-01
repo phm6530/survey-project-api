@@ -153,6 +153,7 @@ export class TemplateService {
 
   //템플릿찾기
   async existTemplate(id: number) {
+    console.log('있음?', id);
     if (!id) throw new BadRequestException('잘못된 요청..');
 
     const existsTemplate = await this.templateRepository.findOne({
@@ -303,8 +304,6 @@ export class TemplateService {
     );
 
     const resultArr = [] as TemplateItemMetadata<RespondentsAndMaxGroup>[];
-
-    console.log(result);
 
     result.forEach((row) => {
       resultArr.push({

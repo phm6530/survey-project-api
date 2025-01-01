@@ -143,7 +143,7 @@ export class TemplateController {
     await this.templateService.existTemplate(id);
 
     // Template 전달
-    return this.templateService.getTemplateById(template, id);
+    return await this.templateService.getTemplateById(template, id);
   }
 
   // 삭제
