@@ -5,7 +5,7 @@ import { CreateReplyDto } from 'src/reply/dto/createReply.dto';
 import { DeleteReplyDto } from 'src/reply/dto/deleteReply.dto';
 import { TokenGuard } from 'src/auth/guard/token.guard';
 import { UserModel } from 'src/user/entries/user.entity';
-import { User } from 'src/user/decorator/getUser.decorator';
+import { UserInToken } from 'src/user/decorator/getUser.decorator';
 
 @Controller('reply')
 export class ReplyController {
@@ -25,7 +25,7 @@ export class ReplyController {
   deleteReply(
     @parseIntParam('replyId') replyId: number,
     @Body() body: DeleteReplyDto,
-    @User() user?: UserModel,
+    @UserInToken() user?: UserModel,
   ) {
     const { password } = body;
     return this.replyService.deleteReply(replyId, password, user);

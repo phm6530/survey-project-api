@@ -16,7 +16,7 @@ import { CreateBoardDto } from './dto/CreateBoardDto.dto';
 import { BoardGuard } from './guard/board.guard';
 
 import { JwtPayload } from 'src/auth/type/jwt';
-import { User } from 'src/user/decorator/getUser.decorator';
+import { UserInToken } from 'src/user/decorator/getUser.decorator';
 import { withTransactions } from 'lib/withTransaction.lib';
 import { DataSource, QueryRunner } from 'typeorm';
 import { Request, Response } from 'express';
@@ -92,7 +92,7 @@ export class BoardController {
   async BoardPost(
     @Body() body: CreateBoardDto,
     @Param('category') category: BoardCategory,
-    @User() user: JwtPayload,
+    @UserInToken() user: JwtPayload,
   ) {
     if (!Object.values(BOARD_CATEGORY).includes(category)) {
       throw new BadRequestException('잘못된 요청입니다.');
@@ -116,7 +116,7 @@ export class BoardController {
   async deleteBoard(
     @Body() body: { anonymous?: string; password?: string },
     @Param() params: { category: BoardCategory; id: string },
-    @User() jwtUser: JwtPayload,
+    @UserInToken() jwtUser: JwtPayload,
   ) {
     const { category, id } = params;
 

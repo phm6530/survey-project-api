@@ -15,7 +15,7 @@ import { DataSource, QueryRunner } from 'typeorm';
 import { parseIntParam } from 'src/common/decorator/parseIntParam.decorator';
 import { DeleteCommentDto } from 'src/comment/dto/deleteComment.dto';
 import { TokenGuard } from 'src/auth/guard/token.guard';
-import { User } from 'src/user/decorator/getUser.decorator';
+import { UserInToken } from 'src/user/decorator/getUser.decorator';
 import { UserModel } from 'src/user/entries/user.entity';
 
 @Controller('comment')
@@ -55,7 +55,7 @@ export class CommentController {
   deleteComment(
     @parseIntParam('commentId') id: number,
     @Body() body: DeleteCommentDto,
-    @User() user?: UserModel,
+    @UserInToken() user?: UserModel,
   ) {
     console.log(body);
 
