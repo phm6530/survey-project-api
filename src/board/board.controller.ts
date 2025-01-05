@@ -16,7 +16,7 @@ import { CreateBoardDto } from './dto/CreateBoardDto.dto';
 import { BoardGuard } from './guard/board.guard';
 
 import { JwtPayload } from 'src/auth/type/jwt';
-import { UserInToken } from 'src/user/decorator/getUser.decorator';
+import { UserInToken } from '../user/decorator/getuser.decorator';
 import { withTransactions } from 'lib/withTransaction.lib';
 import { DataSource, QueryRunner } from 'typeorm';
 import { Request, Response } from 'express';
