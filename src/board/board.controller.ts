@@ -16,7 +16,7 @@ import { CreateBoardDto } from './dto/CreateBoardDto.dto';
 import { BoardGuard } from './guard/board.guard';
 
 import { JwtPayload } from 'src/auth/type/jwt';
-import { UserInToken } from '../user/decorator/getuser.decorator';
+import { UserInToken } from 'src/user/decorator/getUser.decorator';
 import { withTransactions } from 'lib/withTransaction.lib';
 import { DataSource, QueryRunner } from 'typeorm';
 import { Request, Response } from 'express';
@@ -44,7 +44,6 @@ export class BoardController {
     @Query('page') curPage?: number | null,
   ) {
     const data = await this.boardService.getList(category, keyword, curPage);
-    console.log(data[0][2]);
     return data;
   }
 

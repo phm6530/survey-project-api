@@ -32,7 +32,7 @@ async function bootstrap() {
     }),
   );
   app.use(cookieParser());
-
+  app.setGlobalPrefix('/');
   // Port
   await app.listen(5000);
 }

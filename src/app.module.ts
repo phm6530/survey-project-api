@@ -1,9 +1,7 @@
 import { ClassSerializerInterceptor, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ContactModule } from './contact/contact.module';
 import { ConfigModule } from '@nestjs/config';
-// import { ServeStaticModule } from '@nestjs/serve-static';
 import { AuthModule } from './auth/auth.module';
 import { CommonModule } from './common/common.module';
 import { UserModule } from './user/user.module';
@@ -34,23 +32,23 @@ const board = [BoardmetaModel, BoardContentsModel];
 console.log('NODE_ENV:', process.env.NODE_ENV);
 @Module({
   imports: [
-    ContactModule,
     // ServeStaticModule.forRoot({
     //   rootPath: PUBLIC_FOLDER_PATH,
     //   serveRoot: '/public',
     // }),
 
     ConfigModule.forRoot({
-      envFilePath: '.env.local',
+      envFilePath:
+        process.env.NODE_ENV === 'development' ? '.env.local' : '.env',
       isGlobal: true,
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: process.env.DB_HOST,
-      port: parseInt(process.env.DB_PORT),
-      username: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_DATABASE,
+      url: process.env.DB_SUPABASE_URL,
+      ssl:
+        process.env.NODE_ENV === 'production'
+          ? { rejectUnauthorized: false }
+          : false,
       entities: [
         UserModel,
         TemplateMetaModel,
@@ -66,6 +64,11 @@ console.log('NODE_ENV:', process.env.NODE_ENV);
         ...board,
       ],
       synchronize: process.env.NODE_ENV === 'development',
+      extra: {
+        max: 10, // 최대 연결 수
+        connectionTimeoutMillis: 5000, // 연결 시도 시간 초과 (5초)
+        idleTimeoutMillis: 10000, // 유휴 연결 시간 (10초)
+      },
     }),
     AuthModule,
     CommonModule,
