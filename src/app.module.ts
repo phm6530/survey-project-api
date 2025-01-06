@@ -29,7 +29,15 @@ import { BoardContentsModel } from './board/entries/BoardContentsModel';
 
 const auth = [RefreshTokenModel];
 const board = [BoardmetaModel, BoardContentsModel];
-console.log('NODE_ENV:', process.env.NODE_ENV);
+
+const STATUS_TYPE = {
+  DEVELOPMENT: 'DEVELOPMENT',
+  PRODUCTION: 'PRODUCTION',
+};
+
+//운영기 or 개발기
+const status = STATUS_TYPE.PRODUCTION;
+
 @Module({
   imports: [
     // ServeStaticModule.forRoot({
@@ -38,13 +46,23 @@ console.log('NODE_ENV:', process.env.NODE_ENV);
     // }),
 
     ConfigModule.forRoot({
-      envFilePath:
-        process.env.NODE_ENV === 'development' ? '.env.local' : '.env',
+      envFilePath: status === STATUS_TYPE.DEVELOPMENT ? '.env.local' : '.env',
       isGlobal: true,
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      url: process.env.DB_SUPABASE_URL,
+      ...(status === STATUS_TYPE.DEVELOPMENT
+        ? {
+            host: process.env.DB_HOST,
+            port: parseInt(process.env.DB_PORT),
+            username: process.env.DB_USER,
+            password: process.env.DB_PASSWORD,
+            database: process.env.DB_DATABASE,
+          }
+        : {
+            url: process.env.DB_SUPABASE_URL,
+          }),
+
       ssl:
         process.env.NODE_ENV === 'production'
           ? { rejectUnauthorized: false }

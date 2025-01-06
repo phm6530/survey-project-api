@@ -72,7 +72,7 @@ export class BoardController {
 
       res.cookie(cookieName, cookieName, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production', // 운영에선 true
+        // secure: process.env.NODE_ENV === 'production', // 운영에선 true
         sameSite: false,
         maxAge: 60 * 60 * 1000,
         path: '/',

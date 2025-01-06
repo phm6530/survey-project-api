@@ -53,7 +53,7 @@ export class AuthController {
 
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // 운영에선 true
+      // secure: process.env.NODE_ENV === 'production', // 운영에선 true
       sameSite: false,
       maxAge:
         this.commonService.parseTime(
@@ -70,7 +70,7 @@ export class AuthController {
   async logout(@Res({ passthrough: true }) res: Response) {
     res.cookie('token', '', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      // secure: process.env.NODE_ENV === 'production',
       maxAge: 0, // 쿠키 만료
       path: '/',
     });
