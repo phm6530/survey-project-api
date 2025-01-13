@@ -9,4 +9,5 @@ export const ENV_KEYS = {
     HASH: 'HASH',
     SCRECT_KEY: 'SECRET_KEY',
   },
+  STATUS: 'NODE_ENV',
 } as const;

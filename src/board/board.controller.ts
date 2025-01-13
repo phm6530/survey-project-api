@@ -20,6 +20,8 @@ import { UserInToken } from 'src/user/decorator/getUser.decorator';
 import { withTransactions } from 'lib/withTransaction.lib';
 import { DataSource, QueryRunner } from 'typeorm';
 import { Request, Response } from 'express';
+import { ConfigService } from '@nestjs/config';
+import { ENV_KEYS } from 'config/jwt.config';
 
 export const BOARD_CATEGORY = {
   FREE: 'free',
@@ -34,6 +36,7 @@ export class BoardController {
   constructor(
     private readonly boardService: BoardService,
     private readonly dataSource: DataSource,
+    private readonly configService: ConfigService,
   ) {}
 
   //Get List
@@ -72,8 +75,11 @@ export class BoardController {
 
       res.cookie(cookieName, cookieName, {
         httpOnly: true,
-        // secure: process.env.NODE_ENV === 'production', // 운영에선 true
-        sameSite: false,
+        secure:
+          this.configService.get(ENV_KEYS.STATUS) === 'development'
+            ? false
+            : true,
+        sameSite: 'none',
         maxAge: 60 * 60 * 1000,
         path: '/',
       });

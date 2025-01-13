@@ -26,32 +26,33 @@ import { RefreshTokenModel } from 'src/auth/entries/refreshToken.entity';
 import { BoardModule } from './board/board.module';
 import { BoardmetaModel } from './board/entries/BoardmetaModel';
 import { BoardContentsModel } from './board/entries/BoardContentsModel';
+import * as dotenv from 'dotenv';
 
 const auth = [RefreshTokenModel];
 const board = [BoardmetaModel, BoardContentsModel];
 
-const STATUS_TYPE = {
-  DEVELOPMENT: 'DEVELOPMENT',
-  PRODUCTION: 'PRODUCTION',
-};
-
 //운영기 or 개발기
-const status = STATUS_TYPE.PRODUCTION;
+dotenv.config({
+  path: (() => {
+    switch (!!process.env.NODE_ENV) {
+      case process.env.NODE_ENV === 'DEVELOPMENT':
+        return '.env.local';
+      case process.env.NODE_ENV === 'PRODUCTION':
+        return '.env';
+      default:
+        return '.env.local';
+    }
+  })(),
+});
 
 @Module({
   imports: [
-    // ServeStaticModule.forRoot({
-    //   rootPath: PUBLIC_FOLDER_PATH,
-    //   serveRoot: '/public',
-    // }),
-
     ConfigModule.forRoot({
-      envFilePath: status === STATUS_TYPE.DEVELOPMENT ? '.env.local' : '.env',
       isGlobal: true,
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      ...(status === STATUS_TYPE.DEVELOPMENT
+      ...(process.env.NODE_ENV === 'DEVELOPMENT'
         ? {
             host: process.env.DB_HOST,
             port: parseInt(process.env.DB_PORT),
@@ -64,8 +65,8 @@ const status = STATUS_TYPE.PRODUCTION;
           }),
 
       ssl:
-        process.env.NODE_ENV === 'production'
-          ? { rejectUnauthorized: false }
+        process.env.NODE_ENV === 'PRODUCTION'
+          ? { rejectUnauthorized: true }
           : false,
       entities: [
         UserModel,
@@ -81,7 +82,7 @@ const status = STATUS_TYPE.PRODUCTION;
         ...auth,
         ...board,
       ],
-      synchronize: process.env.NODE_ENV === 'development',
+      synchronize: process.env.NODE_ENV === 'DEVELOPMENT', // 개발에서만 true
       extra: {
         max: 10, // 최대 연결 수
         connectionTimeoutMillis: 5000, // 연결 시도 시간 초과 (5초)

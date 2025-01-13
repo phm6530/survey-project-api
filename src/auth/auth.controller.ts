@@ -53,8 +53,11 @@ export class AuthController {
 
     res.cookie('token', token, {
       httpOnly: true,
-      // secure: process.env.NODE_ENV === 'production', // 운영에선 true
-      sameSite: false,
+      secure:
+        this.configService.get(ENV_KEYS.STATUS) === 'development'
+          ? false
+          : true,
+      sameSite: 'none',
       maxAge:
         this.commonService.parseTime(
           this.configService.get<string>(ENV_KEYS.JWT.JWT_TOKEN_EXPIRES_IN),
