@@ -95,9 +95,11 @@ export class AuthController {
     res.cookie('token', '', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 0, // 쿠키 만료
       path: '/',
+      domain:
+        process.env.NODE_ENV === 'production' ? '.dopoll.co.kr' : 'localhost',
     });
 
     return { message: '로그아웃 되었습니다.' };
