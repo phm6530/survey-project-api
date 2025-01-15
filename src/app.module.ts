@@ -28,22 +28,29 @@ import { BoardmetaModel } from './board/entries/BoardmetaModel';
 import { BoardContentsModel } from './board/entries/BoardContentsModel';
 import * as dotenv from 'dotenv';
 
-const auth = [RefreshTokenModel];
-const board = [BoardmetaModel, BoardContentsModel];
-
 //운영기 or 개발기
 dotenv.config({
   path: (() => {
     switch (!!process.env.NODE_ENV) {
-      case process.env.NODE_ENV === 'DEVELOPMENT':
+      case process.env.NODE_ENV === 'development':
         return '.env.local';
-      case process.env.NODE_ENV === 'PRODUCTION':
+      case process.env.NODE_ENV === 'production':
         return '.env';
       default:
-        return '.env.local';
+        return '.env';
     }
   })(),
 });
+
+// entities
+const entities = {
+  auth: [RefreshTokenModel],
+  board: [BoardmetaModel, BoardContentsModel],
+  user: [UserModel, AdminModel],
+  template: [TemplateMetaModel, SurveyQuestion, QustionOption],
+  answer: [AnswerModel, RespondentModel, responseText],
+  interaction: [CommentModel, ReplyModel],
+};
 
 @Module({
   imports: [
@@ -52,7 +59,7 @@ dotenv.config({
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      ...(process.env.NODE_ENV === 'DEVELOPMENT'
+      ...(process.env.NODE_ENV === 'development'
         ? {
             host: process.env.DB_HOST,
             port: parseInt(process.env.DB_PORT),
@@ -65,24 +72,11 @@ dotenv.config({
           }),
 
       ssl:
-        process.env.NODE_ENV === 'PRODUCTION'
+        process.env.NODE_ENV === 'production'
           ? { rejectUnauthorized: true }
           : false,
-      entities: [
-        UserModel,
-        TemplateMetaModel,
-        SurveyQuestion,
-        QustionOption,
-        AnswerModel,
-        RespondentModel,
-        responseText,
-        CommentModel,
-        ReplyModel,
-        AdminModel,
-        ...auth,
-        ...board,
-      ],
-      synchronize: process.env.NODE_ENV === 'DEVELOPMENT', // 개발에서만 true
+      entities: Object.values(entities).flat(),
+      synchronize: process.env.NODE_ENV === 'development', // 개발에서만 true
       extra: {
         max: 10, // 최대 연결 수
         connectionTimeoutMillis: 5000, // 연결 시도 시간 초과 (5초)

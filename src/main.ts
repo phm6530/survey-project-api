@@ -15,8 +15,10 @@ async function bootstrap() {
   // });
   //Cookie
   app.enableCors({
-    origin: 'http://localhost:3000', // 클라이언트 URL
+    origin: ['http://localhost:3000', 'https://survey-project-weld.vercel.app'], // 클라이언트 URL
     credentials: true, // 쿠키 전송 허용
+    methods: 'GET,POST,PUT,DELETE,PATCH',
+    allowedHeaders: 'Content-Type, Authorization',
   });
   // Pipe
   app.useGlobalPipes(
@@ -34,7 +36,10 @@ async function bootstrap() {
   app.use(cookieParser());
   app.setGlobalPrefix('/');
   // Port
-  await app.listen(5000);
+  await app.listen(5000, () => {
+    console.log('Server is now running...');
+    console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
+  });
 }
 
 bootstrap();

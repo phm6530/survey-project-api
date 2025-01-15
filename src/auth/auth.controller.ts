@@ -53,16 +53,17 @@ export class AuthController {
 
     res.cookie('token', token, {
       httpOnly: true,
-      secure:
-        this.configService.get(ENV_KEYS.STATUS) === 'development'
-          ? false
-          : true,
-      sameSite: 'none',
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // cross-site 요청이 필요한 경우
       maxAge:
         this.commonService.parseTime(
           this.configService.get<string>(ENV_KEYS.JWT.JWT_TOKEN_EXPIRES_IN),
         ) * 1000,
       path: '/',
+      domain:
+        process.env.NODE_ENV === 'production'
+          ? '.survey-project-weld.vercel.app'
+          : 'localhost',
     });
 
     return { user: instanceToPlain(user) };
@@ -73,7 +74,8 @@ export class AuthController {
   async logout(@Res({ passthrough: true }) res: Response) {
     res.cookie('token', '', {
       httpOnly: true,
-      // secure: process.env.NODE_ENV === 'production',
+      secure: process.env.NODE_ENV === 'production',
+
       maxAge: 0, // 쿠키 만료
       path: '/',
     });

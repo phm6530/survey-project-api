@@ -21,11 +21,11 @@ import { withTransactions } from 'lib/withTransaction.lib';
 import { DataSource, QueryRunner } from 'typeorm';
 import { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
-import { ENV_KEYS } from 'config/jwt.config';
 
 export const BOARD_CATEGORY = {
   FREE: 'free',
   NOTICE: 'notice',
+  QA: 'qa',
 } as const;
 
 export type BoardCategory =
@@ -75,11 +75,8 @@ export class BoardController {
 
       res.cookie(cookieName, cookieName, {
         httpOnly: true,
-        secure:
-          this.configService.get(ENV_KEYS.STATUS) === 'development'
-            ? false
-            : true,
-        sameSite: 'none',
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         maxAge: 60 * 60 * 1000,
         path: '/',
       });
@@ -102,6 +99,7 @@ export class BoardController {
     if (!Object.values(BOARD_CATEGORY).includes(category)) {
       throw new BadRequestException('잘못된 요청입니다.');
     }
+    console.log(category);
 
     // pool 생성
     const pool = new withTransactions(this.dataSource);
