@@ -49,24 +49,44 @@ export class AuthController {
     @Body() body: SignInDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { token, user } = await this.authService.loginUser(body);
+    try {
+      console.log('1. Login attempt for:', body.email);
 
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // cross-site 요청이 필요한 경우
-      maxAge:
-        this.commonService.parseTime(
-          this.configService.get<string>(ENV_KEYS.JWT.JWT_TOKEN_EXPIRES_IN),
-        ) * 1000,
-      path: '/',
-      domain:
-        process.env.NODE_ENV === 'production'
-          ? '.survey-project-weld.vercel.app'
-          : 'localhost',
-    });
+      const { token, user } = await this.authService.loginUser(body);
+      console.log('2. Token generated:', !!token);
+      console.log('3. User data received:', !!user);
 
-    return { user: instanceToPlain(user) };
+      console.log('4. Environment:', process.env.NODE_ENV);
+      console.log('5. Setting cookie with options:', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        path: '/',
+        domain:
+          process.env.NODE_ENV === 'production' ? '.dopoll.co.kr' : 'localhost',
+      });
+
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        maxAge:
+          this.commonService.parseTime(
+            this.configService.get<string>(ENV_KEYS.JWT.JWT_TOKEN_EXPIRES_IN),
+          ) * 1000,
+        path: '/',
+        domain:
+          process.env.NODE_ENV === 'production' ? '.dopoll.co.kr' : 'localhost',
+      });
+
+      console.log('6. Cookie set completed');
+      console.log('7. Sending response with user data');
+
+      return { user: instanceToPlain(user) };
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
   }
 
   @Patch('/logout')

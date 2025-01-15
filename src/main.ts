@@ -15,7 +15,7 @@ async function bootstrap() {
   // });
   //Cookie
   app.enableCors({
-    origin: ['http://localhost:3000', 'https://survey-project-weld.vercel.app'], // 클라이언트 URL
+    origin: ['http://localhost:3000', 'https://dopoll.co.kr'], // 클라이언트 URL
     credentials: true, // 쿠키 전송 허용
     methods: 'GET,POST,PUT,DELETE,PATCH',
     allowedHeaders: 'Content-Type, Authorization',
