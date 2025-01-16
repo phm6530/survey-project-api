@@ -15,11 +15,11 @@ async function bootstrap() {
   // });
   //Cookie
   app.enableCors({
-    origin: [
-      'http://localhost:3000', //로컬 테스트용
-      'https://dopoll.co.kr',
-      'https://www.dopoll.co.kr',
-    ], // 클라이언트 URL
+    origin:
+      process.env.NODE_ENV === 'development'
+        ? ['http://localhost:3000']
+        : ['https://dopoll.co.kr', 'https://www.dopoll.co.kr'],
+    // 클라이언트 URL
     credentials: true, // 쿠키 전송 허용
     methods: 'GET,POST,PUT,DELETE,PATCH',
     allowedHeaders: 'Content-Type, Authorization',
