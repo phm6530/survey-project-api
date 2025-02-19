@@ -46,6 +46,14 @@ export class SurveyQuestion {
   @Column({ nullable: true })
   img: string;
 
+  // 필수는 항상 true
+  @Column({ default: true })
+  required: boolean;
+
+  // 복수 선택은 항상 false ..
+  @Column({ default: false })
+  multi_select: boolean;
+
   //객관식 일 때 Option 연결
   @OneToMany(() => QustionOption, (option) => option.question, {
     nullable: true,

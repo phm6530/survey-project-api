@@ -60,12 +60,20 @@ export class BoardService {
     };
   };
 
+  async getViewCount(id: number): Promise<number> {
+    const post = await this.boardMetaRepository.findOne({
+      where: { id },
+      select: ['view'],
+    });
+    return post?.view ?? 0;
+  }
+
   private transformBoardItem = (item: BoardmetaModel) => {
-    const { anonymous, user, createAt, updateAt, contents, ...rest } = item;
+    const { anonymous, user, createdAt, updateAt, contents, ...rest } = item;
 
     return {
       ...rest,
-      createAt: this.commonService.transformTimeformat(createAt),
+      createdAt: this.commonService.transformTimeformat(createdAt),
       updateAt: this.commonService.transformTimeformat(updateAt),
       creator: {
         ...this.getCreatorInfo(anonymous, user),
@@ -119,7 +127,7 @@ export class BoardService {
       return {
         id: e.board_id,
         updateAt: this.commonService.transformTimeformat(e.board_updateAt),
-        createAt: this.commonService.transformTimeformat(e.board_createAt),
+        createdAt: this.commonService.transformTimeformat(e.board_createdAt),
         title: e.board_title,
         category: e.board_category,
         anonymous: e.board_anonymous,

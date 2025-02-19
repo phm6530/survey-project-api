@@ -56,7 +56,7 @@ export enum USER_ROLE {
 }
 
 export type User = {
-  createAt: string;
+  createdAt: string;
   id: number;
   email: string;
   nickname: string;
@@ -86,7 +86,7 @@ export type TemplateItemMetadata<
 interface TemplateResult {
   id: number;
   updateAt: Date;
-  createAt: Date;
+  createdAt: Date;
   title: string;
   description: string;
   templateType: string;
@@ -308,7 +308,7 @@ export class TemplateService {
     result.forEach((row) => {
       resultArr.push({
         id: row.id,
-        createdAt: this.commonService.transformTimeformat(row.createAt),
+        createdAt: this.commonService.transformTimeformat(row.createdAt),
         title: row.title,
         description: row.description,
         isGenderCollected: row.isGenderCollected,
@@ -331,7 +331,7 @@ export class TemplateService {
         },
         creator: {
           id: row.creatorId,
-          createAt: row.createAt?.toLocaleDateString(),
+          createdAt: row.createdAt?.toLocaleDateString(),
           email: row.email,
           nickname: row.nickname,
           role: row.role as USER_ROLE,
@@ -427,7 +427,7 @@ export class TemplateService {
     ): TemplateItemMetadata<RespondentsAndMaxGroup> => {
       return {
         id: row.id,
-        createdAt: this.commonService.transformTimeformat(row.createAt),
+        createdAt: this.commonService.transformTimeformat(row.createdAt),
         title: row.title,
         description: row.description,
         isGenderCollected: row.isGenderCollected,
@@ -450,7 +450,7 @@ export class TemplateService {
         },
         creator: {
           id: row.creatorId,
-          createAt: row.createAt?.toLocaleDateString(),
+          createdAt: row.createdAt?.toLocaleDateString(),
           email: row.email,
           nickname: row.nickname,
           role: row.role as USER_ROLE,

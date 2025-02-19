@@ -2,6 +2,7 @@ import { PickType } from '@nestjs/mapped-types';
 import { Type } from 'class-transformer';
 import {
   ArrayMinSize,
+  IsBoolean,
   IsEnum,
   IsOptional,
   IsString,
@@ -14,7 +15,11 @@ import {
   SurveyQuestion,
 } from 'src/template/entries/survey/survey-questions.entity';
 
-export class SurveyQuestionDto extends PickType(SurveyQuestion, ['label']) {
+export class SurveyQuestionDto extends PickType(SurveyQuestion, [
+  'label',
+  'multi_select',
+  'required',
+]) {
   // 문항
   @IsString()
   label: string;
@@ -27,6 +32,14 @@ export class SurveyQuestionDto extends PickType(SurveyQuestion, ['label']) {
   @IsOptional()
   @IsString()
   img?: string;
+
+  @IsBoolean()
+  required: boolean;
+
+  //객관식일 때만 multi Select체크
+  @ValidateIf((o) => o.type === QuestionTypes.SELECT)
+  @IsBoolean()
+  multi_select: boolean;
 
   //무슨 문항인지? 주관 / 객관
   @ValidateIf((o) => o.type === QuestionTypes.SELECT) // 객관식일 때만 options 필수

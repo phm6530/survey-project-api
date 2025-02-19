@@ -159,6 +159,8 @@ export class AnswerService {
       .orderBy('questions.id', 'ASC')
       .getOne();
 
+    console.log(data);
+
     // if (data && data.questions) {
     //   const questions = data.questions;
 

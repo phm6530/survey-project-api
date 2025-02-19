@@ -5,6 +5,7 @@ import { CommonService } from 'src/common/common.service';
 import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
 import { UserModel } from 'src/user/entries/user.entity';
 import { Repository } from 'typeorm';
+import { respondentsGroup } from 'util/respondentsFilter.util';
 
 @Injectable()
 export class UserService {
@@ -27,7 +28,7 @@ export class UserService {
 
     const transformForamt = {
       ...userData,
-      createAt: this.commonService.transformTimeformat(userData.createAt),
+      createdAt: this.commonService.transformTimeformat(userData.createdAt),
     };
 
     return transformForamt;
@@ -35,6 +36,19 @@ export class UserService {
 
   //내가 만든 템플릿 가져오기
   async getMyContents({ id: userId }: Pick<UserModel, 'id'>) {
-    return await this.TemplateService.getList({ id: userId });
+    const data = await this.templateMetaRepository
+      .createQueryBuilder('template')
+      .leftJoinAndSelect('template.respondents', 'respondents')
+      .where('template.creatorId = :id', { id: userId })
+      .getMany();
+
+    const resultData = data.map((temp) => {
+      return {
+        ...temp,
+        createdAt: this.commonService.transformTimeformat(temp.createdAt),
+        respondents: respondentsGroup(temp.respondents),
+      };
+    });
+    return resultData;
   }
 }

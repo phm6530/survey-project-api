@@ -3,7 +3,7 @@ import { UserService } from './user.service';
 import { TokenGuard } from 'src/auth/guard/token.guard';
 import { UserInToken } from 'src/user/decorator/getUser.decorator';
 import { UserModel } from 'src/user/entries/user.entity';
-import { instanceToPlain } from 'class-transformer';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
 
 @Controller('user')
 export class UserController {
@@ -11,12 +11,13 @@ export class UserController {
 
   @Get('/me')
   @UseGuards(TokenGuard)
-  getAuthUserdata(@UserInToken() user: UserModel) {
-    const userData = this.userService.getUser({
+  async getAuthUserdata(@UserInToken() user: UserModel) {
+    const userData = await this.userService.getUser({
       id: user.id,
       email: user.email,
     });
-    return instanceToPlain(userData);
+    const userInstance = plainToInstance(UserModel, userData);
+    return instanceToPlain(userInstance);
   }
 
   // 내가만든 템플릿 리스트

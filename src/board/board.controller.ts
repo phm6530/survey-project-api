@@ -10,6 +10,7 @@ import {
   Req,
   Res,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { BoardService } from './board.service';
 import { CreateBoardDto } from './dto/CreateBoardDto.dto';
@@ -21,6 +22,8 @@ import { withTransactions } from 'lib/withTransaction.lib';
 import { DataSource, QueryRunner } from 'typeorm';
 import { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
+import { TrackingInterceptor } from 'src/common/interafce/tracking.interface';
+import { ViewCountInterceptor } from './interceptors/view-count.interceptor';
 
 export const BOARD_CATEGORY = {
   FREE: 'free',
@@ -50,44 +53,6 @@ export class BoardController {
     return data;
   }
 
-  //Board Detail
-  @Get('/:category/:id')
-  async BoardItem(
-    @Param() params: { category: BoardCategory; id: string },
-    @Req() req: Request, // 요청 객체를 사용
-    @Res({ passthrough: true }) res: Response, // 응답 객체는 쿠키 설정에 사용
-  ) {
-    const { category, id } = params;
-
-    if (
-      !Object.values(BOARD_CATEGORY).includes(category) ||
-      isNaN(parseInt(id, 10))
-    ) {
-      throw new BadRequestException('잘못된 요청입니다.');
-    }
-    const cookieName = `board_${category}_${id}`;
-    const cookies = req.cookies;
-
-    const cookieToken = cookies[`board_${category}_${id}`];
-    if (!cookieToken) {
-      // 조회수 +
-      await this.boardService.incrementViewCount(+id);
-
-      res.cookie(cookieName, cookieName, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-        maxAge: 60 * 60 * 1000,
-        path: '/',
-      });
-    }
-
-    return await this.boardService.getDetailPost({
-      category,
-      postId: parseInt(id, 10),
-    });
-  }
-
   //post
   @Post('/:category')
   @UseGuards(BoardGuard)
@@ -99,7 +64,6 @@ export class BoardController {
     if (!Object.values(BOARD_CATEGORY).includes(category)) {
       throw new BadRequestException('잘못된 요청입니다.');
     }
-    console.log(category);
 
     // pool 생성
     const pool = new withTransactions(this.dataSource);
@@ -111,6 +75,34 @@ export class BoardController {
         user,
       });
     });
+  }
+
+  //Board Detail
+  @Get('/:category/:id')
+  async BoardItem(@Param() params: { category: BoardCategory; id: string }) {
+    const { category, id } = params;
+
+    if (
+      !Object.values(BOARD_CATEGORY).includes(category) ||
+      isNaN(parseInt(id, 10))
+    ) {
+      throw new BadRequestException('잘못된 요청입니다.');
+    }
+
+    console.log('나왜호출이안되냐 ???');
+
+    return await this.boardService.getDetailPost({
+      category,
+      postId: parseInt(id, 10),
+    });
+  }
+
+  @Get('view/:category/:id/')
+  @UseInterceptors(ViewCountInterceptor)
+  async View() {
+    return {
+      success: true,
+    };
   }
 
   //Detail Delete

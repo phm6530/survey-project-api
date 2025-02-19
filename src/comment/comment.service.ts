@@ -94,11 +94,11 @@ export class CommentService {
     const resultDatas = comments.map((e) => {
       return {
         ...e,
-        createAt: this.commonService.transformTimeformat(e.createAt),
+        createdAt: this.commonService.transformTimeformat(e.createdAt),
         replies: e.replies.map((reply) => {
           return {
             ...reply,
-            createAt: this.commonService.transformTimeformat(reply.createAt),
+            createdAt: this.commonService.transformTimeformat(reply.createdAt),
             creator: { ...this.getCreatorInfo(reply.anonymous, reply.user) },
           };
         }),

@@ -4,7 +4,7 @@ import { withTransaction } from 'lib/withTransaction.lib';
 import { DataSource, QueryRunner } from 'typeorm';
 import { CreateAnswerDto } from 'src/answer/dto/CreateAnswer.dto';
 import { GENDER_GROUP, TEMPLATE_TYPE } from 'type/template';
-import { AgeGroup, GenderGrop } from './entries/respondent.entity';
+import { AgeGroup } from './entries/respondent.entity';
 
 export type AnswerPostParams = {
   template: TEMPLATE_TYPE;

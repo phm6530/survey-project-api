@@ -13,6 +13,7 @@ async function bootstrap() {
   //   methods: 'GET,POST,PUT,DELETE,PATCH', // 허용할 메서드 지정
   //   allowedHeaders: 'Content-Type, Authorization',
   // });
+
   //Cookie
   app.enableCors({
     origin:
@@ -24,6 +25,7 @@ async function bootstrap() {
     methods: 'GET,POST,PUT,DELETE,PATCH',
     allowedHeaders: 'Content-Type, Authorization',
   });
+
   // Pipe
   app.useGlobalPipes(
     new ValidationPipe({
@@ -37,8 +39,10 @@ async function bootstrap() {
       // DTO에 정의되지 않은 속성이 있을 경우, 요청을 거부하고 에러 발생
     }),
   );
+
   app.use(cookieParser());
   app.setGlobalPrefix('/');
+
   // Port
   await app.listen(5000, () => {
     console.log('Server is now running...');

@@ -15,11 +15,11 @@ import { EmailSerivce } from './service/email.service';
       },
       //파일 유효성검사
       fileFilter: (req, file, cb) => {
-        //확장자 따기
-        const ext = extname(file.originalname);
+        //확장자 따기 + 소문자 트랜스폼
+        const ext = extname(file.originalname).toLowerCase();
 
         //확장자 맞지않으면 에러 반환
-        if (ext !== '.jpg' && ext !== '.jpeg' && ext !== '.png') {
+        if (!['.jpg', '.jpeg', '.png', '.webp'].includes(ext)) {
           return cb(
             new BadRequestException('취급하는 확장자가 아닙니다.'),
             false,

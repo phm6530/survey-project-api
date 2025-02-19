@@ -16,5 +16,5 @@ export abstract class BaseModel {
   updateAt: Date;
 
   @CreateDateColumn() // 생성때만 업데이트
-  createAt: Date;
+  createdAt: Date;
 }
