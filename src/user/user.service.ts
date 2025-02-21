@@ -40,6 +40,7 @@ export class UserService {
       .createQueryBuilder('template')
       .leftJoinAndSelect('template.respondents', 'respondents')
       .where('template.creatorId = :id', { id: userId })
+      .orderBy('template.createdAt', 'DESC')
       .getMany();
 
     const resultData = data.map((temp) => {

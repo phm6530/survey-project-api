@@ -27,6 +27,7 @@ import { FindUserDto } from './dto/user-exist.dto';
 import { EmailSerivce } from 'src/common/service/email.service';
 import { PasswordResetDto } from './dto/password-reset.dto';
 import { TokenGuard } from './guard/token.guard';
+import { mailFormContents } from './mail';
 
 @Controller('auth')
 export class AuthController {
@@ -136,17 +137,13 @@ export class AuthController {
       throw new BadRequestException('등록된 회원 정보가 없습니다.');
     }
     const pin = this.commonService.addPin(4);
+    const HTML = mailFormContents({ nickname: IsExistUser.nickname, pin });
 
-    const HTML = `
-        <h1>문의사항</h1>
-        <br><br>
-        안녕하세요 ${IsExistUser.nickname}
-        핀번호 ${pin}
-        <br>
-      <p style="font-size:12px; opacity : .7;">
-    `;
-
-    await this.EmailService.sendEmail(IsExistUser.email, '문의 발송', HTML);
+    await this.EmailService.sendEmail(
+      IsExistUser.email,
+      '[Dopoll]  인증키 발급',
+      HTML,
+    );
 
     return {
       statusCode: 200,

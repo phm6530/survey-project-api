@@ -88,7 +88,7 @@ export class AnswerService {
     });
 
     for (const item of answers) {
-      const { questionId, type, optionId, answer } = item;
+      const { questionId, type, optionId: optionsAnswer, answer } = item;
 
       const existQuestion = questions.find((e) => e.id === questionId);
       if (!existQuestion)
@@ -104,19 +104,20 @@ export class AnswerService {
 
         await responseTextRepository.save(entity);
       } else if (type === 'select') {
-        //객관식반영
-        const existOption = await optionRepository.findOne({
-          where: { id: optionId },
-        });
+        // 객관식
 
-        // Add Answer Entity
-        const entity = answerRepository.create({
-          question: { id: existOption.id },
-          answer,
-          repondent: insertResult,
-        });
-
-        await answerRepository.save(entity);
+        for (const item of optionsAnswer) {
+          const existOption = await optionRepository.findOne({
+            where: { id: Object.values(item)[0] },
+          });
+          // Add Answer Entity
+          const entity = answerRepository.create({
+            question: { id: existOption.id },
+            answer,
+            repondent: insertResult,
+          });
+          await answerRepository.save(entity);
+        }
       } else {
         throw new BadRequestException('없는 항목 잘못된 요청입니다.') as never;
       }
@@ -124,23 +125,6 @@ export class AnswerService {
   }
 
   async getAnswers({ template, id }: AnswerPostParams) {
-    console.count('Answers::');
-    // const data = await this.templateMetaRepository.findOne({
-    //   where: { id: +id, templateType: template },
-    //   relations: [
-    //     'respondents', //참여자
-    //     'questions',
-    //     //주관식
-    //     'questions.textAnswers',
-    //     'questions.textAnswers.respondent',
-
-    //     //객관식
-    //     'questions.options',
-    //     'questions.options.response',
-    //     'questions.options.response.repondent',
-    //   ],
-    // });
-
     const data = await this.templateMetaRepository
       .createQueryBuilder('template')
       .leftJoinAndSelect('template.respondents', 'respondents')

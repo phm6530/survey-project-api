@@ -48,6 +48,7 @@ export class AnswerController {
     return result;
   }
 
+  // 주관식 Infinity Scroll로 페이징
   @Post('/question/:id/:page')
   async getTextAnswerPage(
     @Body()

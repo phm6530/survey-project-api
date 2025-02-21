@@ -1,7 +1,10 @@
 import { Type } from 'class-transformer';
 import {
+  IsArray,
   IsEnum,
   IsNumber,
+  isObject,
+  IsObject,
   IsOptional,
   IsString,
   ValidateNested,
@@ -9,7 +12,11 @@ import {
 import { AgeGroup, GenderGrop } from 'src/answer/entries/respondent.entity';
 import { QuestionTypes } from 'src/template/entries/survey/survey-questions.entity';
 
-class AnswerDto {
+class OptionMap {
+  [key: string]: number;
+}
+
+export class AnswerDto {
   @IsNumber()
   @Type(() => Number)
   questionId: number;
@@ -18,9 +25,8 @@ class AnswerDto {
   type: QuestionTypes;
 
   @IsOptional()
-  @IsNumber()
-  @Type(() => Number)
-  optionId?: number;
+  @Type(() => OptionMap) // Transform 과정에서 OptionMap 타입으로 변환
+  optionId?: OptionMap[]; // 배열이 아닌 객체로 받기
 
   @IsOptional()
   @IsString()
