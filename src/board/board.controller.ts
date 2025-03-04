@@ -20,9 +20,7 @@ import { JwtPayload } from 'src/auth/type/jwt';
 import { UserInToken } from 'src/user/decorator/getUser.decorator';
 import { withTransactions } from 'lib/withTransaction.lib';
 import { DataSource, QueryRunner } from 'typeorm';
-import { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
-import { TrackingInterceptor } from 'src/common/interafce/tracking.interface';
 import { ViewCountInterceptor } from './interceptors/view-count.interceptor';
 
 export const BOARD_CATEGORY = {
