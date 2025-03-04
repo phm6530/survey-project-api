@@ -30,7 +30,16 @@ import * as dotenv from 'dotenv';
 
 //운영기 or 개발기
 dotenv.config({
-  path: process.env.NODE_ENV === 'development' ? '.env.local' : '.env',
+  path: (() => {
+    switch (!!process.env.NODE_ENV) {
+      case process.env.NODE_ENV === 'development':
+        return '.env.local';
+      case process.env.NODE_ENV === 'production':
+        return '.env';
+      default:
+        return '.env';
+    }
+  })(),
 });
 
 // entities
@@ -61,16 +70,16 @@ const entities = {
         : {
             url: process.env.DB_SUPABASE_URL,
           }),
-      ssl: { rejectUnauthorized: false },
+      ssl:
+        process.env.NODE_ENV === 'production'
+          ? { rejectUnauthorized: true }
+          : false,
       entities: Object.values(entities).flat(),
-      synchronize: false, // 개발에서만 true
+      synchronize: true, // 개발에서만 true
       extra: {
         max: 10, // 최대 연결 수
         connectionTimeoutMillis: 5000, // 연결 시도 시간 초과 (5초)
         idleTimeoutMillis: 10000, // 유휴 연결 시간 (10초)
-        ssl: {
-          rejectUnauthorized: false,
-        },
       },
     }),
     AuthModule,
