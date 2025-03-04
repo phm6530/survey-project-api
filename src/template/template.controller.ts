@@ -58,6 +58,7 @@ export class TemplateController {
   ) {
     const templateId = await withTransaction(this.dataSource, async (qr) => {
       const { questions, ...metadata } = body;
+
       //Meta
       const meta = await this.templateService.createTemplateMeta(
         { ...metadata },
@@ -82,7 +83,7 @@ export class TemplateController {
 
     return {
       statusCode: 201,
-      data: { templateId },
+      templateId,
     };
   }
 
@@ -113,19 +114,19 @@ export class TemplateController {
     if (existsTemplate) {
       const { questions: _questions, ...rest } = body;
 
-      const patchTemplate = await transaction.execute(async (qr) => {
-        await this.templateService.createTemplateMeta(
+      /** Meta Data만 갈음 처리하기때문에 questions는 발라냈음 ㅇㅇ */
+
+      await transaction.execute(async (qr) => {
+        return await this.templateService.createTemplateMeta(
           { ...rest },
           qr,
           existsTemplate,
         );
-
-        // await this.templateService.createSurveyQustions();
       });
 
       return {
         statusCode: 201,
-        patchTemplate,
+        templateId: existsTemplate.id,
       };
     } else {
       throw new BadRequestException('Error...');

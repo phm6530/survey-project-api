@@ -218,6 +218,7 @@ export class TemplateService {
   }: { sort?: TEMPLATERLIST_SORT; page?: number } & Partial<
     Pick<UserModel, 'id'>
   >) {
+    console.log('sort', sort);
     let sql = `
             WITH AgeGenderCounts AS (
                 SELECT 
@@ -281,11 +282,19 @@ export class TemplateService {
           sql += ` ORDER BY tm.id DESC`;
           break;
         case TEMPLATERLIST_SORT.FEMALE:
-          sql += ` ORDER BY (CASE WHEN mag.gender = 'female' THEN 0 WHEN mag.gender = 'male' THEN 1 ELSE 2 END), total DESC NULLS LAST, mag.count DESC NULLS LAST`;
+          sql += ` ORDER BY (CASE WHEN mag.gender = 'female' THEN 0 WHEN mag.gender = 'male' THEN 1 ELSE 2 END), 
+         trc.female_count DESC NULLS LAST,
+         total DESC NULLS LAST, 
+         mag.count DESC NULLS LAST`;
           break;
         case TEMPLATERLIST_SORT.MALE:
-          sql += ` ORDER BY (CASE WHEN mag.gender = 'male' THEN 0 WHEN mag.gender = 'female' THEN 1 ELSE 2 END), total DESC NULLS LAST, mag.count DESC NULLS LAST`;
+          sql += ` ORDER BY 
+                   (CASE WHEN mag.gender = 'male' THEN 0 WHEN mag.gender = 'female' THEN 1 ELSE 2 END),
+                   trc.male_count DESC NULLS LAST,
+                   total DESC NULLS LAST, 
+                   mag.count DESC NULLS LAST`;
           break;
+
         case TEMPLATERLIST_SORT.RESPONDENTS:
           sql += `ORDER BY total DESC NULLS LAST`;
           break;
@@ -302,6 +311,8 @@ export class TemplateService {
       sql,
       params,
     );
+
+    console.log(result);
 
     const resultArr = [] as TemplateItemMetadata<RespondentsAndMaxGroup>[];
 

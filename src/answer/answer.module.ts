@@ -6,6 +6,7 @@ import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
 import { AnswerModel } from 'src/answer/entries/responseSelect.entity';
 import { RespondentModel } from 'src/answer/entries/respondent.entity';
 import { responseText } from 'src/answer/entries/responseText.entity';
+import { CommonService } from 'src/common/common.service';
 
 @Module({
   imports: [
@@ -17,6 +18,6 @@ import { responseText } from 'src/answer/entries/responseText.entity';
     ]),
   ],
   controllers: [AnswerController],
-  providers: [AnswerService],
+  providers: [AnswerService, CommonService],
 })
 export class AnswerModule {}

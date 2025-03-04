@@ -70,13 +70,12 @@ const entities = {
         : {
             url: process.env.DB_SUPABASE_URL,
           }),
-
-      // ssl:
-      //   process.env.NODE_ENV === 'production'
-      //     ? { rejectUnauthorized: false }
-      //     : true,
+      ssl:
+        process.env.NODE_ENV === 'production'
+          ? { rejectUnauthorized: true }
+          : false,
       entities: Object.values(entities).flat(),
-      synchronize: process.env.NODE_ENV === 'development', // 개발에서만 true
+      synchronize: true, // 개발에서만 true
       extra: {
         max: 10, // 최대 연결 수
         connectionTimeoutMillis: 5000, // 연결 시도 시간 초과 (5초)

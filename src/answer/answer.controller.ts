@@ -3,22 +3,12 @@ import { AnswerService } from './answer.service';
 import { withTransaction } from 'lib/withTransaction.lib';
 import { DataSource, QueryRunner } from 'typeorm';
 import { CreateAnswerDto } from 'src/answer/dto/CreateAnswer.dto';
-import { GENDER_GROUP, TEMPLATE_TYPE } from 'type/template';
-import { AgeGroup } from './entries/respondent.entity';
+import { TEMPLATE_TYPE } from 'type/template';
 
 export type AnswerPostParams = {
   template: TEMPLATE_TYPE;
   id: string;
 };
-
-// {
-//   "gender": "male",
-//   "ageGroup": "50",
-//   "answers": [
-//     { "questionId": 219, "answer": "아니오" },
-//     { "questionId": 220, "answer": "tst" }
-//   ]
-// }
 
 @Controller('answer')
 export class AnswerController {
@@ -49,21 +39,13 @@ export class AnswerController {
   }
 
   // 주관식 Infinity Scroll로 페이징
-  @Post('/question/:id/:page')
-  async getTextAnswerPage(
-    @Body()
-    body: { genderGroup: GENDER_GROUP | 'all'; ageGroup: AgeGroup | 'all' },
-    @Param() params: { id: string; page: string },
-  ) {
+  @Get('/question/:id/:page')
+  async getTextAnswerPage(@Param() params: { id: string; page: string }) {
     const { id, page } = params;
 
     const [answers, isNextPage] = await this.answerService.getTextAnswer(
       +id,
       +page,
-      {
-        AgeGroup: body.ageGroup,
-        GenderGroup: body.genderGroup,
-      },
     );
 
     return {

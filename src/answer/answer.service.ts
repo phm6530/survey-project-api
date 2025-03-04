@@ -21,15 +21,17 @@ import { TemplateMetaModel } from 'src/template/entries/template-meta.entity';
 
 import { In, QueryRunner, Repository } from 'typeorm';
 import { responseText } from 'src/answer/entries/responseText.entity';
-import { respondentsGroup } from 'util/respondentsFilter.util';
+import { respondentsGroup, testFilter } from 'util/respondentsFilter.util';
 import { GENDER_GROUP } from 'type/template';
 import maxGroupData from 'util/maxGroup';
+import { CommonService } from 'src/common/common.service';
 
 @Injectable()
 export class AnswerService {
   constructor(
     @InjectRepository(TemplateMetaModel)
     private readonly templateMetaRepository: Repository<TemplateMetaModel>,
+    private readonly commonService: CommonService,
     // @InjectRepository(AnswerModel)
     // private readonly answerRepositorys: Repository<AnswerModel>,
     // @InjectRepository(RespondentModel)
@@ -69,6 +71,25 @@ export class AnswerService {
     if (!existTemplate) {
       throw new NotFoundException('이미 삭제되었거나 잘못된 요청입니다.');
     }
+
+    if (
+      existTemplate.startDate &&
+      this.commonService.DateCompareToday().isBefore(existTemplate.startDate)
+    ) {
+      throw new BadRequestException('제출 기간이 아닙니다.');
+    }
+
+    console.log('제출됨?');
+
+    if (
+      existTemplate.endDate &&
+      this.commonService.DateCompareToday().isAfter(existTemplate.endDate)
+    ) {
+      throw new BadRequestException('제출 기간이 종료 되었습니다.');
+    }
+
+    // existTemplate.startDate;
+    // existTemplate.endDate;
 
     const respondentEntity = respondentRepository.create({
       age: ageGroup,
@@ -143,20 +164,6 @@ export class AnswerService {
       .orderBy('questions.id', 'ASC')
       .getOne();
 
-    console.log(data);
-
-    // if (data && data.questions) {
-    //   const questions = data.questions;
-
-    //   for (const qs of questions) {
-    //     if (qs.type === QuestionTypes.TEXT) {
-    //       const [textAnswers, isNextPage] = await this.getTextAnswer(qs.id);
-
-    //       qs.textAnswers = textAnswers as responseText[];
-    //     }
-    //   }
-    // }
-
     if (!data) {
       throw new NotFoundException('이미 삭제되었거나 잘못된 요청입니다.');
     }
@@ -181,7 +188,7 @@ export class AnswerService {
                 age: e.repondent.age,
               };
             });
-            const responseGroupData = respondentsGroup(groupData);
+            const responseGroupData = testFilter(groupData);
 
             return { ...rest, response: responseGroupData };
           });
@@ -230,23 +237,21 @@ export class AnswerService {
         questionId: id,
       });
 
-    // 성별 필터 조건
-    if (
-      filters.GenderGroup &&
-      (filters.GenderGroup === GENDER_GROUP.FEMALE ||
-        filters.GenderGroup === GENDER_GROUP.MALE)
-    ) {
-      queryBuilder.andWhere('respondent.gender = :gender', {
-        gender: filters.GenderGroup,
-      });
-    }
+    // if (
+    //   filters.GenderGroup &&
+    //   (filters.GenderGroup === GENDER_GROUP.FEMALE ||
+    //     filters.GenderGroup === GENDER_GROUP.MALE)
+    // ) {
+    //   queryBuilder.andWhere('respondent.gender = :gender', {
+    //     gender: filters.GenderGroup,
+    //   });
+    // }
 
-    // 나이 필터 조건
-    if (filters.AgeGroup && filters.AgeGroup !== 'all') {
-      queryBuilder.andWhere('respondent.age = :age', {
-        age: filters.AgeGroup,
-      });
-    }
+    // if (filters.AgeGroup && filters.AgeGroup !== 'all') {
+    //   queryBuilder.andWhere('respondent.age = :age', {
+    //     age: filters.AgeGroup,
+    //   });
+    // }
 
     const [Answers, totalCnt] = await queryBuilder
       .orderBy('textAnswers.id', 'DESC')
@@ -254,8 +259,6 @@ export class AnswerService {
       .skip((page - 1) * limit)
       .take(limit)
       .getManyAndCount();
-
-    console.count('test');
 
     const nextPage =
       totalCnt > Answers.length + (page - 1) * limit ? page + 1 : null;

@@ -103,6 +103,21 @@ export class CommonService {
     return dayjs(date).utc(true).tz('Asia/Seoul').format(format);
   }
 
+  public DateCompareToday() {
+    const today = dayjs().tz('Asia/Seoul');
+
+    return {
+      isAfter: (date: Date): boolean => {
+        const t = today.isAfter(dayjs(date).tz('Asia/Seoul'), 'day');
+        return t;
+      },
+      isBefore: (date: Date): boolean => {
+        const t = today.isBefore(dayjs(date).tz('Asia/Seoul'), 'day');
+        return t;
+      },
+    };
+  }
+
   public parseTime(time: string | number): number {
     if (typeof time === 'number') {
       return time; // 이미 초 단위라면 그대로 반환

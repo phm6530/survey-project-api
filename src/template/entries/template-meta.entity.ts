@@ -41,10 +41,6 @@ export class TemplateMetaModel extends BaseModel {
   @OneToMany(() => RespondentModel, (respondent) => respondent.template, {})
   respondents: RespondentModel[];
 
-  //템플릿에 대한 댓글
-  // @OneToMany(() => CommentModel, (comment) => comment.template)
-  // comments: CommentModel[];
-
   //생성한유저
   @ManyToOne(() => UserModel, (user) => user.templates)
   creator: UserModel;

@@ -19,7 +19,11 @@ async function bootstrap() {
     origin:
       process.env.NODE_ENV === 'development'
         ? ['http://localhost:3000']
-        : ['https://dopoll.co.kr', 'https://www.dopoll.co.kr'],
+        : [
+            'https://dopoll.co.kr',
+            'https://www.dopoll.co.kr',
+            'http://localhost:3000',
+          ],
     // 클라이언트 URL
     credentials: true, // 쿠키 전송 허용
     methods: 'GET,POST,PUT,DELETE,PATCH',
