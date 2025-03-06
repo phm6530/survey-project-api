@@ -109,13 +109,24 @@ export class AnswerService {
     });
 
     for (const item of answers) {
-      const { questionId, type, optionId: optionsAnswer, answer } = item;
+      console.log(item);
+      const {
+        questionId,
+        type,
+        optionId: optionsAnswer,
+        answer,
+        required,
+      } = item;
 
       const existQuestion = questions.find((e) => e.id === questionId);
       if (!existQuestion)
         throw new BadRequestException('없는 항목 잘못된 요청입니다.');
 
       if (type === 'text') {
+        if (!required && answer.trim().length === 0) {
+          continue;
+        }
+
         //주관식 반영
         const entity = responseTextRepository.create({
           answer,
@@ -125,8 +136,11 @@ export class AnswerService {
 
         await responseTextRepository.save(entity);
       } else if (type === 'select') {
-        // 객관식
+        if (!required && optionsAnswer.length === 0) {
+          continue;
+        }
 
+        // 객관식
         for (const item of optionsAnswer) {
           const existOption = await optionRepository.findOne({
             where: { id: Object.values(item)[0] },

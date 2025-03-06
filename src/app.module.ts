@@ -70,10 +70,7 @@ const entities = {
         : {
             url: process.env.DB_SUPABASE_URL,
           }),
-      ssl:
-        process.env.NODE_ENV === 'production'
-          ? { rejectUnauthorized: true }
-          : false,
+      ssl: false,
       entities: Object.values(entities).flat(),
       synchronize: true, // 개발에서만 true
       extra: {

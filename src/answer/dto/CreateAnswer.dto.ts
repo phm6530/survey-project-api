@@ -1,10 +1,8 @@
 import { Type } from 'class-transformer';
 import {
-  IsArray,
+  IsBoolean,
   IsEnum,
   IsNumber,
-  isObject,
-  IsObject,
   IsOptional,
   IsString,
   ValidateNested,
@@ -31,6 +29,10 @@ export class AnswerDto {
   @IsOptional()
   @IsString()
   answer?: string;
+
+  @IsBoolean()
+  @Type(() => Boolean)
+  required: boolean;
 }
 
 export class CreateAnswerDto {
