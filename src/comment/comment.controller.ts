@@ -57,8 +57,6 @@ export class CommentController {
     @Body() body: DeleteCommentDto,
     @UserInToken() user?: UserModel,
   ) {
-    console.log(body);
-
     return this.commentService.deleteCommentTarget(id, user, body.password);
   }
 }

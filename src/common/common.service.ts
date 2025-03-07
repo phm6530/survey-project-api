@@ -37,7 +37,6 @@ export class CommonService {
     const template = await templateMeta.findOne({
       where: { id },
     });
-    console.log(template);
 
     if (!template) {
       throw new NotFoundException('이미 삭제되었거나 잘못된 요청입니다.');

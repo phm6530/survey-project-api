@@ -144,7 +144,10 @@ export class TemplateController {
     await this.templateService.existTemplate(id);
 
     // Template 전달
-    return await this.templateService.getTemplateById(template, id);
+    const test = await this.templateService.getTemplateById(template, id);
+
+    console.log(test);
+    return test;
   }
 
   // 삭제

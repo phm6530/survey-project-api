@@ -75,8 +75,8 @@ export type TemplateItemMetadata<
   templateType: TEMPLATE_TYPE;
   isGenderCollected: boolean;
   isAgeCollected: boolean;
-  startDate: string | null;
-  endDate: string | null;
+  startDate: Date | null;
+  endDate: Date | null;
   thumbnail: string;
   respondents: T;
   creator: User;
@@ -153,7 +153,6 @@ export class TemplateService {
 
   //템플릿찾기
   async existTemplate(id: number) {
-    console.log('있음?', id);
     if (!id) throw new BadRequestException('잘못된 요청..');
 
     const existsTemplate = await this.templateRepository.findOne({
@@ -312,8 +311,6 @@ export class TemplateService {
       params,
     );
 
-    console.log(result);
-
     const resultArr = [] as TemplateItemMetadata<RespondentsAndMaxGroup>[];
 
     result.forEach((row) => {
@@ -324,8 +321,8 @@ export class TemplateService {
         description: row.description,
         isGenderCollected: row.isGenderCollected,
         isAgeCollected: row.isAgeCollected,
-        startDate: row.startDate?.toLocaleDateString() || null,
-        endDate: row.endDate?.toLocaleDateString() || null,
+        startDate: row.startDate || null,
+        endDate: row.endDate || null,
         thumbnail: row.thumbnail,
         respondents: {
           tag: RESPONDENT_TAG.MAXGROUP,
@@ -438,13 +435,13 @@ export class TemplateService {
     ): TemplateItemMetadata<RespondentsAndMaxGroup> => {
       return {
         id: row.id,
-        createdAt: this.commonService.transformTimeformat(row.createdAt),
+        createdAt: row.createdAt.toISOString(),
         title: row.title,
         description: row.description,
         isGenderCollected: row.isGenderCollected,
         isAgeCollected: row.isAgeCollected,
-        startDate: row.startDate?.toLocaleDateString() || null,
-        endDate: row.endDate?.toLocaleDateString() || null,
+        startDate: row.startDate || null,
+        endDate: row.endDate || null,
         thumbnail: row.thumbnail,
         respondents: {
           tag: RESPONDENT_TAG.MAXGROUP,
@@ -472,6 +469,7 @@ export class TemplateService {
     };
 
     const metaData = Tests(getTemplateMetaData[0]);
+    console.log(metaData);
 
     //프론트에게 디테일임을 알림 ㅇㅇ
     return {
