@@ -110,20 +110,39 @@ export class TemplateController {
       throw new BadRequestException('잘못된 요청입니다.');
     }
 
-    // 존재하면..
     if (existsTemplate) {
-      const { questions: _questions, ...rest } = body;
-
-      /** Meta Data만 갈음 처리하기때문에 questions는 발라냈음 ㅇㅇ */
+      // 존재하면..
+      const { questions: questions, ...rest } = body;
 
       await transaction.execute(async (qr) => {
-        return await this.templateService.createTemplateMeta(
+        await this.templateService.createTemplateMeta(
           { ...rest },
           qr,
           existsTemplate,
         );
-      });
 
+        // 시작일 전인지 검사
+        const isBeforeStartDate =
+          existsTemplate.startDate &&
+          this.commonService
+            .DateCompareToday()
+            .isBefore(existsTemplate.startDate);
+
+        if (isBeforeStartDate) {
+          switch (rest.templateType) {
+            case TEMPLATE_TYPE.SURVEY: {
+              await this.templateService.createSurveyQustions(
+                questions,
+                qr,
+                existsTemplate,
+              );
+              return existsTemplate.id;
+            }
+            default:
+              throw new BadRequestException('잘못된 요청입니다.');
+          }
+        }
+      });
       return {
         statusCode: 201,
         templateId: existsTemplate.id,
@@ -144,10 +163,7 @@ export class TemplateController {
     await this.templateService.existTemplate(id);
 
     // Template 전달
-    const test = await this.templateService.getTemplateById(template, id);
-
-    console.log(test);
-    return test;
+    return await this.templateService.getTemplateById(template, id);
   }
 
   // 삭제

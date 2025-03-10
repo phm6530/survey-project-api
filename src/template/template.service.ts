@@ -177,6 +177,12 @@ export class TemplateService {
   ) {
     const repository = qr.manager.getRepository<SurveyQuestion>(SurveyQuestion);
 
+    const existingQuestions = await repository.find({
+      where: { templateMeta: { id: meta.id } },
+    });
+
+    await repository.remove(existingQuestions);
+
     await Promise.all(
       questions.map(async (item) => {
         const entity = repository.create({ ...item, templateMeta: meta });

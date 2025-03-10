@@ -34,7 +34,6 @@ export class AnswerController {
 
   @Get('/:template/:id')
   async getResult(@Param() params: AnswerPostParams) {
-    console.count('요청함?');
     const result = await this.answerService.getAnswers(params);
     return result;
   }
@@ -43,7 +42,7 @@ export class AnswerController {
   @Get('/question/:id/:page')
   async getTextAnswerPage(@Param() params: { id: string; page: string }) {
     const { id, page } = params;
-    console.count('Text 요청함?');
+
     const [answers, isNextPage] = await this.answerService.getTextAnswer(
       +id,
       +page,
