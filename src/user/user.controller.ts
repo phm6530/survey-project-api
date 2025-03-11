@@ -1,4 +1,9 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  UnauthorizedException,
+  UseGuards,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { TokenGuard } from 'src/auth/guard/token.guard';
 import { UserInToken } from 'src/user/decorator/getUser.decorator';
@@ -16,6 +21,7 @@ export class UserController {
       id: user.id,
       email: user.email,
     });
+
     const userInstance = plainToInstance(UserModel, userData);
     return instanceToPlain(userInstance);
   }
@@ -24,6 +30,7 @@ export class UserController {
   @Get('/me/contents')
   @UseGuards(TokenGuard)
   getMycontents(@UserInToken() user: UserModel) {
+    console.count('test');
     return this.userService.getMyContents({ id: +user.id });
   }
 }

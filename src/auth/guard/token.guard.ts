@@ -81,7 +81,6 @@ export class TokenGuard implements CanActivate {
 
       return true;
     } catch (error) {
-      console.log(error.message);
       throw new UnauthorizedException(
         `${error.message} : 토큰이 만료되었거나 유효하지 않습니다.`,
       );

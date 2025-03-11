@@ -59,7 +59,7 @@ export class AuthService {
   ): Promise<boolean> {
     const isVerify = await bcrypt.compare(inputPassword, storedHashedPassword);
     if (!isVerify && throwError) {
-      throw new ForbiddenException('비밀번호가 일치하지 않습니다.');
+      throw new ForbiddenException('이메일이나 패스워드가 일치하지 않습니다');
     }
     return isVerify;
   }
@@ -118,9 +118,7 @@ export class AuthService {
     const isExistUser = await this.isExistUser({ email });
 
     if (!isExistUser) {
-      throw new BadRequestException(
-        '없는 사용자거나 패스워드가 일치하지않습니다.',
-      );
+      throw new BadRequestException('이메일이나 패스워드가 일치하지 않습니다');
     }
 
     return isExistUser;
@@ -132,7 +130,7 @@ export class AuthService {
     const verfiy = await this.verifyPassword(password, isExistUser.password);
 
     if (!verfiy) {
-      throw new BadRequestException('비밀번호가 일치하지 않습니다');
+      throw new BadRequestException('이메일이나 패스워드가 일치하지 않습니다');
     } else {
       const { role, email, nickname, id } = isExistUser;
 

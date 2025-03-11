@@ -93,6 +93,8 @@ export class AuthController {
   @Patch('/logout')
   // @UseGuards(UserInTokenGuard)
   async logout(@Res({ passthrough: true }) res: Response) {
+    // console
+
     res.cookie('token', '', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
